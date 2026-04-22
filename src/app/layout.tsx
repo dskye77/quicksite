@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QuickSite — Your business online in minutes",
+  title: "MakeSite — Your business online in minutes",
   description:
     "Build a professional website for your Nigerian business in minutes. No coding needed.",
   keywords: ["website builder", "Nigeria", "small business", "online store"],

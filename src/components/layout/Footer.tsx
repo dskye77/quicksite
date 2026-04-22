@@ -77,7 +77,7 @@ export default function Footer() {
                 <Zap className="h-5 w-5 text-primary-foreground fill-current" />
               </div>
               <div>
-                <p className="font-bold text-lg leading-tight">QuickSite</p>
+                <p className="font-bold text-lg leading-tight">MakeSite</p>
                 <p className="text-xs text-muted-foreground">.com.ng</p>
               </div>
             </Link>
@@ -121,7 +121,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center text-sm text-muted-foreground gap-3">
-          <p>© {new Date().getFullYear()} QuickSite Technologies Ltd.</p>
+          <p>© {new Date().getFullYear()} GXU Studios LTD</p>
           <div className="flex items-center gap-4 text-xs">
             <Link href="/privacy" className="hover:text-primary transition">Privacy</Link>
             <Link href="/terms" className="hover:text-primary transition">Terms</Link>

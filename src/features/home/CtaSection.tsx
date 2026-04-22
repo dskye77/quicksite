@@ -17,7 +17,7 @@ export default function CtaSection() {
               Your business deserves to be online.
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
-              Join 12,400+ Nigerian businesses growing with QuickSite. Free
+              Join 12,400+ Nigerian businesses growing with MakeSite. Free
               forever — no card needed.
             </p>
             <Link href="/signup">

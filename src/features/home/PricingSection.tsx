@@ -8,10 +8,9 @@ const PLANS = [
     price: "0",
     features: [
       "1 mini-site",
-      "Quicksite subdomain",
       "Basic templates",
       "Up to 5 sections",
-      "Quicksite branding",
+      "MakeSite branding",
     ],
     buttonText: "Start Free",
     isPopular: false,

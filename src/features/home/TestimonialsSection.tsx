@@ -14,7 +14,7 @@ const TESTIMONIALS = [
     name: "Tunde Bakare",
     business: "TB Cuts Barbershop — Ibadan",
     quote:
-      "My customers can now book appointments online. QuickSite changed how I run my business completely.",
+      "My customers can now book appointments online. MakeSite changed how I run my business completely.",
   },
   {
     initials: "CE",

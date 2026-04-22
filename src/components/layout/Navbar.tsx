@@ -81,7 +81,7 @@ export default function Navbar() {
             <Zap className="h-4 w-4 text-primary-foreground fill-current" />
           </div>
           <div className="leading-none">
-            <p className="font-bold text-base">QuickSite</p>
+            <p className="font-bold text-base">MakeSite</p>
             <p className="text-[10px] text-muted-foreground">.com.ng</p>
           </div>
         </Link>

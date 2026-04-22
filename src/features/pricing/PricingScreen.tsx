@@ -12,10 +12,9 @@ const PLANS = [
     description: "Start building your mini-site",
     features: [
       "1 mini-site",
-      "Quicksite subdomain (username.quicksite.com.ng)",
       "Basic templates",
       "Up to 5 sections",
-      "Quicksite branding",
+      "MakeSite branding",
     ],
     buttonText: "Get Started Free",
     href: "/signup",
@@ -26,7 +25,7 @@ const PLANS = [
     description: "Perfect for small businesses",
     isPopular: true,
     features: [
-      "Remove Quicksite branding",
+      "Remove MakeSite branding",
       "Up to 10 sections",
       "Better templates",
       "Social links (WhatsApp, Instagram, TikTok)",

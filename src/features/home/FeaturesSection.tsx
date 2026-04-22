@@ -21,7 +21,7 @@ const FEATURES = [
     icon: Rocket,
     title: "Go Live Instantly",
     description:
-      "Hit publish and your site is online on a free quicksite.com.ng subdomain. It's that fast.",
+      "Hit publish and your site is online. It's that fast.",
   },
   {
     id: "04",
@@ -41,7 +41,7 @@ export default function FeaturesSection() {
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mb-14">
           <div className="inline-flex items-center border border-border px-2.5 py-0.5 text-xs rounded-full mb-4 font-medium bg-muted/50">
-            Why QuickSite
+            Why MakeSite
           </div>
           <h2 className="text-4xl sm:text-5xl font-bold tracking-tight text-balance">
             Everything you need to{" "}

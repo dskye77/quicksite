@@ -31,7 +31,7 @@ export default function MobileReadySection() {
                 Your customers are on their phones. Your website should be too.
               </h2>
               <p className="text-primary-foreground/80 mb-6 leading-relaxed max-w-md">
-                Every QuickSite template looks beautiful on Android, iPhone, and
+                Every MakeSite template looks beautiful on Android, iPhone, and
                 tablet — automatically. Edit on the go from your phone.
               </p>
               <Link href="/templates">
