@@ -79,7 +79,7 @@ function DeleteModal({ site, onClose }: { site: Site; onClose: () => void }) {
 // ── Site Card ─────────────────────────────────────────────────────────────────
 
 function SiteCard({ site }: { site: Site }) {
-  const { toggleSiteStatus, setDeleteConfirm, ui } = useDashboardStore();
+  const { toggleSiteStatus, setDeleteConfirm } = useDashboardStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
 
