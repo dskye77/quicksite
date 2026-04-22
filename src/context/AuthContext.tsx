@@ -2,9 +2,10 @@
 
 // src/context/AuthContext.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// SINGLE auth source of truth for the entire app.
-// Backed by Firebase Auth. Replaces both the old mock AuthContext
-// and the old src/lib/useAuth.ts Firebase hook.
+// Auth source of truth. On every sign-in it:
+//  1. Sets the Firebase user in context
+//  2. Creates / updates the Firestore profile
+//  3. Loads the profile + sites into the Zustand store
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -16,11 +17,14 @@ import {
   signInWithPopup,
   signOut,
   updateProfile,
+  sendPasswordResetEmail,
   AuthError,
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
+import { createOrUpdateUserProfile } from "@/lib/firestore";
+import { useDashboardStore } from "@/store/useDashboardStore";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface AuthContextType {
   user: User | null;
@@ -28,14 +32,13 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  sendReset: (email: string) => Promise<void>;
   logOut: () => Promise<void>;
 }
 
-// ── Context ───────────────────────────────────────────────────────────────────
-
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// ── Helper: human-readable Firebase errors ────────────────────────────────────
+// ── Friendly Firebase errors ──────────────────────────────────────────────────
 
 function friendlyError(err: unknown): string {
   const code = (err as AuthError)?.code ?? "";
@@ -50,7 +53,9 @@ function friendlyError(err: unknown): string {
     "auth/popup-closed-by-user": "Google sign-in was cancelled.",
     "auth/network-request-failed": "Network error. Check your connection.",
   };
-  return map[code] ?? (err instanceof Error ? err.message : "Something went wrong.");
+  return (
+    map[code] ?? (err instanceof Error ? err.message : "Something went wrong.")
+  );
 }
 
 // ── Provider ──────────────────────────────────────────────────────────────────
@@ -58,18 +63,42 @@ function friendlyError(err: unknown): string {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { fetchSites, fetchProfile, reset } = useDashboardStore();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+      if (firebaseUser) {
+        // Hydrate Zustand on every page load / token refresh
+        await Promise.all([
+          fetchProfile(firebaseUser.uid),
+          fetchSites(firebaseUser.uid),
+        ]);
+      } else {
+        reset();
+      }
       setLoading(false);
     });
-    return unsubscribe;
-  }, []);
+    return unsub;
+  }, [fetchSites, fetchProfile, reset]);
+
+  const afterSignIn = async (u: User) => {
+    await createOrUpdateUserProfile(u.uid, {
+      displayName: u.displayName ?? "",
+      email: u.email ?? "",
+      photoURL: u.photoURL ?? "",
+    });
+    await Promise.all([fetchProfile(u.uid), fetchSites(u.uid)]);
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const { user: u } = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+      await afterSignIn(u);
     } catch (err) {
       throw new Error(friendlyError(err));
     }
@@ -77,10 +106,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (name: string, email: string, password: string) => {
     try {
-      const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(newUser, { displayName: name });
-      // Trigger a re-read so displayName is populated immediately
-      setUser({ ...newUser, displayName: name } as User);
+      const { user: u } = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+      await updateProfile(u, { displayName: name });
+      setUser({ ...u, displayName: name } as User);
+      await afterSignIn({ ...u, displayName: name } as User);
     } catch (err) {
       throw new Error(friendlyError(err));
     }
@@ -88,7 +121,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const { user: u } = await signInWithPopup(auth, googleProvider);
+      await afterSignIn(u);
+    } catch (err) {
+      throw new Error(friendlyError(err));
+    }
+  };
+
+  const sendReset = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
     } catch (err) {
       throw new Error(friendlyError(err));
     }
@@ -96,10 +138,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logOut = async () => {
     await signOut(auth);
+    reset();
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, logOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        signIn,
+        signUp,
+        signInWithGoogle,
+        sendReset,
+        logOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

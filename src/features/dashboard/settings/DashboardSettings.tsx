@@ -1,8 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+// src/features/dashboard/settings/DashboardSettings.tsx
+// Real settings: profile save, WhatsApp/SEO defaults, password reset email.
+
+import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useDashboardStore } from "@/store/useDashboardStore";
 import {
   User,
   Lock,
@@ -11,11 +14,119 @@ import {
   ShieldCheck,
   Save,
   Camera,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 
-export default function SettingsPage() {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("profile");
+type Tab = "profile" | "site" | "security";
+
+function TabButton({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ElementType;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
+        active
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+      }`}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </button>
+  );
+}
+
+export default function DashboardSettings() {
+  const { user, sendReset } = useAuth();
+  const { profile, saveProfile, changeProfilePhoto, profileLoading } =
+    useDashboardStore();
+  const [activeTab, setActiveTab] = useState<Tab>("profile");
+
+  // Profile fields
+  const [displayName, setDisplayName] = useState(
+    profile?.displayName ?? user?.displayName ?? "",
+  );
+  const [whatsappNumber, setWhatsappNumber] = useState(
+    profile?.whatsappNumber ?? "",
+  );
+  const [defaultAuthor, setDefaultAuthor] = useState(
+    profile?.defaultAuthor ?? "",
+  );
+
+  // UI state
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSave = async () => {
+    if (!user) return;
+    setSaving(true);
+    setError("");
+    try {
+      const updates: Record<string, string> = { displayName };
+      if (activeTab === "site") {
+        updates.whatsappNumber = whatsappNumber.replace(/\D/g, "");
+        updates.defaultAuthor = defaultAuthor;
+      }
+      await saveProfile(user.uid, updates);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setPhotoUploading(true);
+    try {
+      await changeProfilePhoto(user.uid, file);
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  const handleReset = async () => {
+    if (!user?.email) return;
+    setResetLoading(true);
+    try {
+      await sendReset(user.email);
+      setResetSent(true);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const photoURL = profile?.photoURL || user?.photoURL;
+  const initials = (
+    profile?.displayName ||
+    user?.displayName ||
+    user?.email ||
+    "ME"
+  )
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -27,7 +138,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-8">
-        {/* ── Sidebar Tabs ────────────────────────────────────────────── */}
+        {/* Tabs */}
         <aside className="w-full md:w-48 flex flex-row md:flex-col gap-1 overflow-x-auto pb-2 md:pb-0">
           <TabButton
             active={activeTab === "profile"}
@@ -49,18 +160,45 @@ export default function SettingsPage() {
           />
         </aside>
 
-        {/* ── Main Form Area ──────────────────────────────────────────── */}
+        {/* Form area */}
         <div className="flex-1 space-y-6">
+          {/* ── Profile Tab ────────────────────────────────────────────── */}
           {activeTab === "profile" && (
-            <div className="bg-card border border-border rounded-2xl p-6 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
+              {/* Photo */}
               <div className="flex items-center gap-4">
                 <div className="relative group">
-                  <div className="h-20 w-20 rounded-full bg-primary/10 grid place-items-center border-2 border-dashed border-primary/30">
-                    <User className="h-8 w-8 text-primary" />
+                  <div className="h-20 w-20 rounded-full bg-primary/10 border-2 border-dashed border-primary/30 grid place-items-center overflow-hidden">
+                    {photoURL ? (
+                      <img
+                        src={photoURL}
+                        alt="Profile"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xl font-bold text-primary">
+                        {initials}
+                      </span>
+                    )}
                   </div>
-                  <button className="absolute bottom-0 right-0 p-1.5 bg-primary text-white rounded-full shadow-lg hover:scale-110 transition cursor-pointer">
-                    <Camera className="h-3 w-3" />
+                  <button
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={photoUploading}
+                    className="absolute bottom-0 right-0 p-1.5 bg-primary text-white rounded-full shadow-lg hover:scale-110 transition cursor-pointer disabled:opacity-60"
+                  >
+                    {photoUploading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Camera className="h-3 w-3" />
+                    )}
                   </button>
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePhotoChange}
+                  />
                 </div>
                 <div>
                   <h3 className="font-bold">Profile Picture</h3>
@@ -77,8 +215,9 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. John Doe"
-                    defaultValue={user?.displayName || ""}
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="e.g. Amaka Okafor"
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                   />
                 </div>
@@ -88,9 +227,8 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="email"
-                    placeholder="user@example.com"
                     disabled
-                    value={user?.email || ""}
+                    value={user?.email ?? ""}
                     className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm cursor-not-allowed opacity-70"
                   />
                 </div>
@@ -98,8 +236,9 @@ export default function SettingsPage() {
             </div>
           )}
 
+          {/* ── Site Defaults Tab ──────────────────────────────────────── */}
           {activeTab === "site" && (
-            <div className="bg-card border border-border rounded-2xl p-6 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
               <div className="space-y-4">
                 <h3 className="text-sm font-bold flex items-center gap-2">
                   <MessageCircle className="h-4 w-4 text-primary" />
@@ -115,13 +254,15 @@ export default function SettingsPage() {
                     </span>
                     <input
                       type="text"
+                      value={whatsappNumber}
+                      onChange={(e) => setWhatsappNumber(e.target.value)}
                       placeholder="8012345678"
+                      title="Default Phone Number"
                       className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    This number will be pre-filled when you create new MakeSite
-                    templates.
+                    Pre-filled when you create new sites.
                   </p>
                 </div>
               </div>
@@ -137,8 +278,9 @@ export default function SettingsPage() {
                   </label>
                   <input
                     type="text"
+                    value={defaultAuthor}
+                    onChange={(e) => setDefaultAuthor(e.target.value)}
                     placeholder="Your Name or Brand"
-                    title="Default Site Author"
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
@@ -146,51 +288,69 @@ export default function SettingsPage() {
             </div>
           )}
 
+          {/* ── Security Tab ───────────────────────────────────────────── */}
           {activeTab === "security" && (
-            <div className="bg-card border border-border rounded-2xl p-6 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
               <div className="space-y-4">
                 <h3 className="text-sm font-bold flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  Password Management
+                  Password Reset
                 </h3>
-                <p className="text-xs text-muted-foreground">
-                  Update your password to keep your account secure.
+                <p className="text-sm text-muted-foreground">
+                  We&apos;ll send a password reset link to{" "}
+                  <span className="font-medium text-foreground">
+                    {user?.email}
+                  </span>
+                  .
                 </p>
-                <button className="text-sm font-semibold text-primary hover:underline cursor-pointer">
-                  Send Password Reset Email
-                </button>
+                {resetSent ? (
+                  <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-500/10 rounded-xl px-4 py-3">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Reset email sent! Check your inbox.
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleReset}
+                    disabled={resetLoading}
+                    className="inline-flex items-center gap-2 bg-primary text-primary-foreground h-10 px-6 rounded-full text-sm font-semibold hover:opacity-90 transition disabled:opacity-60 cursor-pointer"
+                  >
+                    {resetLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : null}
+                    Send Reset Email
+                  </button>
+                )}
               </div>
             </div>
           )}
 
-          {/* ── Footer Actions ──────────────────────────────────────────── */}
-          <div className="flex items-center justify-end gap-3">
-            <button className="px-6 py-2 rounded-full text-sm font-medium hover:bg-muted transition cursor-pointer">
-              Cancel
-            </button>
-            <button className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2 rounded-full text-sm font-bold hover:opacity-90 transition shadow-lg shadow-primary/20 cursor-pointer">
-              <Save className="h-4 w-4" />
-              Save Changes
-            </button>
-          </div>
+          {/* Footer actions (not shown on security tab) */}
+          {activeTab !== "security" && (
+            <div className="flex items-center justify-between gap-3">
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <div className="flex items-center gap-3 ml-auto">
+                {saved && (
+                  <span className="text-sm text-emerald-600 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-4 w-4" /> Saved
+                  </span>
+                )}
+                <button
+                  onClick={handleSave}
+                  disabled={saving || profileLoading}
+                  className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-full text-sm font-bold hover:opacity-90 transition disabled:opacity-60 shadow-lg shadow-primary/20 cursor-pointer"
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
-  );
-}
-
-function TabButton({ active, onClick, icon: Icon, label }: any) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
-        active
-          ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-      }`}
-    >
-      <Icon className="h-4 w-4" />
-      {label}
-    </button>
   );
 }

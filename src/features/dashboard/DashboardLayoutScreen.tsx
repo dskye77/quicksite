@@ -1,11 +1,16 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+// src/features/dashboard/DashboardLayoutScreen.tsx
+// Wired to Zustand for sidebar state + create modal.
+
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/hooks/useAuth";
+import { useDashboardStore } from "@/store/useDashboardStore";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   Zap,
   LayoutDashboard,
@@ -19,6 +24,11 @@ import {
   Menu,
 } from "lucide-react";
 
+const CreateSiteScreen = dynamic(
+  () => import("@/features/dashboard/create/CreateSiteScreen"),
+  { ssr: false }
+);
+
 const SIDEBAR_LINKS = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Globe, label: "My Sites", href: "/dashboard/sites" },
@@ -26,25 +36,19 @@ const SIDEBAR_LINKS = [
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+export default function DashboardLayoutScreen({ children }: { children: React.ReactNode }) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, logOut } = useAuth();
+  const { ui, setSidebarOpen, setCreateModal } = useDashboardStore();
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
+    if (!loading && !user) router.push("/login");
   }, [user, loading, router]);
 
   const handleLogout = async () => {
@@ -66,18 +70,29 @@ export default function DashboardLayout({
     );
   }
 
-  const initials = user.displayName
-    ? user.displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
-    : (user.email?.slice(0, 2).toUpperCase() ?? "ME");
+  const initials = (user.displayName ?? user.email ?? "ME")
+    .split(" ")
+    .map((n: string) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
-  const firstName = user.displayName?.split(" ")[0] ?? user.email?.split("@")[0] ?? "there";
+  const firstName =
+    user.displayName?.split(" ")[0] ?? user.email?.split("@")[0] ?? "there";
+
+  const pageTitle = pathname.split("/").filter(Boolean).pop() ?? "dashboard";
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
+      {/* Create site modal */}
+      {ui.createModalOpen && (
+        <CreateSiteScreen onClose={() => setCreateModal(false)} />
+      )}
+
+      {/* ── Sidebar ──────────────────────────────────────────────────── */}
       <aside
         className={`fixed lg:sticky top-0 h-screen z-40 flex flex-col w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300 shrink-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          ui.sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         <div className="p-5 border-b border-sidebar-border">
@@ -94,7 +109,7 @@ export default function DashboardLayout({
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {SIDEBAR_LINKS.map(({ icon: Icon, label, href }) => (
-            <Link key={label} href={href}>
+            <Link key={label} href={href} onClick={() => setSidebarOpen(false)}>
               <div
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                   pathname === href
@@ -125,7 +140,9 @@ export default function DashboardLayout({
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{user.displayName ?? "My Account"}</p>
+              <p className="text-sm font-semibold truncate">
+                {user.displayName ?? "My Account"}
+              </p>
               <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
             </div>
             <button
@@ -140,22 +157,28 @@ export default function DashboardLayout({
       </aside>
 
       {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/40 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      {ui.sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
-      {/* ── Main Content Area ────────────────────────────────────────────── */}
+      {/* ── Main ─────────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-20 bg-background/80 backdrop-blur border-b border-border px-5 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <button className="lg:hidden text-muted-foreground hover:text-foreground" onClick={() => setSidebarOpen(true)}>
+            <button
+              className="lg:hidden text-muted-foreground hover:text-foreground"
+              onClick={() => setSidebarOpen(true)}
+            >
               <Menu className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="font-bold text-lg leading-tight capitalize">
-                {pathname.split("/").pop() || "Dashboard"}
-              </h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Welcome, {firstName} 👋</p>
+              <h1 className="font-bold text-lg leading-tight capitalize">{pageTitle}</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block">
+                Welcome, {firstName} 👋
+              </p>
             </div>
           </div>
 
@@ -165,19 +188,24 @@ export default function DashboardLayout({
                 onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
                 className="text-muted-foreground hover:text-foreground p-2"
               >
-                {resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {resolvedTheme === "dark" ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
               </button>
             )}
-            <button className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full h-9 px-4 text-sm font-semibold hover:opacity-90 transition">
+            <button
+              onClick={() => setCreateModal(true)}
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full h-9 px-4 text-sm font-semibold hover:opacity-90 transition cursor-pointer"
+            >
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">New Site</span>
             </button>
           </div>
         </header>
 
-        <main className="flex-1 p-5 sm:p-7 overflow-y-auto">
-          {children}
-        </main>
+        <main className="flex-1 p-5 sm:p-7 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

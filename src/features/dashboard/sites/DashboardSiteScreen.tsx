@@ -1,5 +1,8 @@
 "use client";
 
+// src/features/dashboard/sites/DashboardSiteScreen.tsx
+// Real sites from Zustand — create, toggle status, delete with confirm.
+
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -9,22 +12,205 @@ import {
   Edit3,
   MoreHorizontal,
   Search,
-  Settings,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
+  Loader2,
+  X,
 } from "lucide-react";
+import { useDashboardStore } from "@/store/useDashboardStore";
+import type { Site } from "@/lib/types";
 
-// Mock data - in a real app, you'd fetch this from your database/Firebase
-const SITES = [];
+// ── Delete Confirm Modal ──────────────────────────────────────────────────────
 
-export default function DashboardSitScreen() {
+function DeleteModal({ site, onClose }: { site: Site; onClose: () => void }) {
+  const { removeSite } = useDashboardStore();
+  const [loading, setLoading] = useState(false);
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await removeSite(site.id);
+    } finally {
+      setLoading(false);
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
+      <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+        <div className="flex items-start justify-between mb-4">
+          <div className="h-10 w-10 rounded-xl bg-destructive/10 grid place-items-center">
+            <Trash2 className="h-5 w-5 text-destructive" />
+          </div>
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <h3 className="font-bold text-lg mb-1">Delete site?</h3>
+        <p className="text-sm text-muted-foreground mb-6">
+          <span className="font-semibold text-foreground">{site.name}</span>{" "}
+          will be permanently deleted. This cannot be undone.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 h-10 rounded-full border border-border text-sm font-medium hover:bg-muted transition cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={loading}
+            className="flex-1 h-10 rounded-full bg-destructive text-white text-sm font-semibold hover:opacity-90 transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Site Card ─────────────────────────────────────────────────────────────────
+
+function SiteCard({ site }: { site: Site }) {
+  const { toggleSiteStatus, setDeleteConfirm, ui } = useDashboardStore();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [toggling, setToggling] = useState(false);
+
+  const handleToggle = async () => {
+    setToggling(true);
+    setMenuOpen(false);
+    try {
+      await toggleSiteStatus(site.id, site.status);
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  return (
+    <div className="group bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-300">
+      {/* Preview placeholder */}
+      <div className="aspect-video bg-muted flex items-center justify-center relative border-b border-border">
+        <Globe className="h-10 w-10 text-muted-foreground/20" />
+        <div className="absolute top-3 right-3">
+          <span
+            className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+              site.status === "published"
+                ? "bg-emerald-500/10 text-emerald-600"
+                : "bg-orange-500/10 text-orange-500"
+            }`}
+          >
+            {site.status}
+          </span>
+        </div>
+      </div>
+
+      <div className="p-5">
+        <div className="flex items-start justify-between mb-1">
+          <h3 className="font-bold text-base truncate">{site.name}</h3>
+
+          {/* Context menu */}
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen((p) => !p)}
+              className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-1 w-44 bg-card border border-border rounded-xl shadow-xl z-20 overflow-hidden">
+                <button
+                  onClick={handleToggle}
+                  disabled={toggling}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted transition disabled:opacity-60"
+                >
+                  {toggling ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : site.status === "published" ? (
+                    <ToggleRight className="h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  {site.status === "published" ? "Unpublish" : "Publish"}
+                </button>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setDeleteConfirm(site.id);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition border-t border-border"
+                >
+                  <Trash2 className="h-4 w-4" /> Delete site
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <a
+          href={`https://makesite.com.ng/${site.slug}`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs text-primary hover:underline flex items-center gap-1 mb-4"
+        >
+          makesite.com.ng/{site.slug} <ExternalLink className="h-3 w-3" />
+        </a>
+
+        <div className="flex items-center justify-between pt-4 border-t border-border">
+          <div className="text-[11px] text-muted-foreground">
+            <p className="font-medium text-foreground">{site.visits} visits</p>
+            <p>{site.whatsappClicks} WhatsApp clicks</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href={`/editor/${site.id}`}>
+              <button
+                className="p-2 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary hover:text-white transition cursor-pointer"
+                title="Edit Site"
+              >
+                <Edit3 className="h-4 w-4" />
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Screen ───────────────────────────────────────────────────────────────
+
+export default function DashboardSiteScreen() {
+  const { sites, sitesLoading, ui, setCreateModal, setDeleteConfirm } =
+    useDashboardStore();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredSites = SITES.filter((site) =>
-    site.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  const siteToDelete = ui.deleteConfirmId
+    ? (sites.find((s) => s.id === ui.deleteConfirmId) ?? null)
+    : null;
+
+  const filtered = sites.filter(
+    (s) =>
+      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.slug.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
     <div className="space-y-6">
-      {/* ── Header Actions ────────────────────────────────────────────── */}
+      {/* Delete confirm */}
+      {siteToDelete && (
+        <DeleteModal
+          site={siteToDelete}
+          onClose={() => setDeleteConfirm(null)}
+        />
+      )}
+
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -36,104 +222,53 @@ export default function DashboardSitScreen() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-
-        <button className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-full h-10 px-6 text-sm font-semibold hover:opacity-90 transition cursor-pointer">
+        <button
+          onClick={() => setCreateModal(true)}
+          className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-full h-10 px-6 text-sm font-semibold hover:opacity-90 transition cursor-pointer"
+        >
           <Plus className="h-4 w-4" /> Create New Site
         </button>
       </div>
 
-      {/* ── Sites Grid ────────────────────────────────────────────────── */}
-      {filteredSites.length > 0 ? (
+      {/* Content */}
+      {sitesLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : filtered.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredSites.map((site) => (
-            <div
-              key={site.id}
-              className="group bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all duration-300"
-            >
-              {/* Preview Placeholder */}
-              <div className="aspect-video bg-muted flex items-center justify-center relative border-b border-border">
-                <Globe className="h-10 w-10 text-muted-foreground/20" />
-                <div className="absolute top-3 right-3">
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      site.status === "Published"
-                        ? "bg-emerald-500/10 text-emerald-500"
-                        : "bg-orange-500/10 text-orange-500"
-                    }`}
-                  >
-                    {site.status}
-                  </span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-1">
-                  <h3 className="font-bold text-base truncate">{site.name}</h3>
-                  <button className="text-muted-foreground hover:text-foreground p-1">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <a
-                  href={`https://${site.url}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-primary hover:underline flex items-center gap-1 mb-4"
-                >
-                  {site.url} <ExternalLink className="h-3 w-3" />
-                </a>
-
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <div className="text-[11px] text-muted-foreground">
-                    <p>Updated {site.updatedAt}</p>
-                    <p className="font-medium text-foreground">
-                      {site.visits} visits
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Link href={`/editor/${site.id}`}>
-                      <button
-                        className="p-2 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary hover:text-white transition cursor-pointer"
-                        title="Edit Site"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </button>
-                    </Link>
-                    <Link href={`/dashboard/settings/${site.id}`}>
-                      <button
-                        className="p-2 rounded-lg bg-muted text-muted-foreground hover:bg-foreground hover:text-background transition cursor-pointer"
-                        title="Site Settings"
-                      >
-                        <Settings className="h-4 w-4" />
-                      </button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {filtered.map((site) => (
+            <SiteCard key={site.id} site={site} />
           ))}
         </div>
       ) : (
-        /* ── Empty State ─────────────────────────────────────────────── */
         <div className="bg-card border border-border rounded-2xl p-20 flex flex-col items-center justify-center text-center gap-4">
           <div className="h-16 w-16 rounded-2xl bg-muted grid place-items-center mb-2">
             <Globe className="h-8 w-8 text-muted-foreground/40" />
           </div>
           <div>
-            <h2 className="font-bold text-xl">No sites found</h2>
+            <h2 className="font-bold text-xl">
+              {searchQuery ? "No sites found" : "No sites yet"}
+            </h2>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto mt-2">
               {searchQuery
-                ? `We couldn't find any sites matching "${searchQuery}"`
-                : "You haven't created any sites yet. Start building your online presence today!"}
+                ? `No sites match "${searchQuery}"`
+                : "Create your first site and go live in minutes."}
             </p>
           </div>
           <button
-            onClick={() => (searchQuery ? setSearchQuery("") : null)}
+            onClick={() =>
+              searchQuery ? setSearchQuery("") : setCreateModal(true)
+            }
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full h-11 px-8 text-sm font-semibold hover:opacity-90 transition mt-2 cursor-pointer"
           >
-            {searchQuery ? "Clear Search" : "Create Your First Site"}
+            {searchQuery ? (
+              "Clear Search"
+            ) : (
+              <>
+                <Plus className="h-4 w-4" /> Create Your First Site
+              </>
+            )}
           </button>
         </div>
       )}
