@@ -2,8 +2,6 @@ import React from "react";
 import { Zap } from "lucide-react";
 import Link from "next/link";
 
-// --- Types ---
-
 interface FooterLink {
   label: string;
   href: string;
@@ -17,9 +15,8 @@ interface LinkGroup {
 interface SocialLink {
   icon: (props: React.SVGProps<SVGSVGElement>) => React.ReactNode;
   href: string;
+  label: string;
 }
-
-// --- Data ---
 
 const footerNavigation: LinkGroup[] = [
   {
@@ -34,34 +31,29 @@ const footerNavigation: LinkGroup[] = [
   {
     title: "Company",
     links: [
-      { label: "About", href: "/" },
-      { label: "Blog", href: "/" },
-      { label: "Careers", href: "/" },
-      { label: "Contact", href: "/" },
+      { label: "About", href: "/about" },
+      { label: "Blog", href: "/blog" },
+      { label: "Careers", href: "/careers" },
+      { label: "Contact", href: "/contact" },
     ],
   },
   {
     title: "Support",
     links: [
-      { label: "Help Center", href: "/" },
-      { label: "WhatsApp Us", href: "/" },
-      { label: "Privacy", href: "/" },
-      { label: "Terms", href: "/" },
+      { label: "Help Center", href: "/help" },
+      { label: "WhatsApp Us", href: "https://wa.me/2348000000000" },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
     ],
   },
 ];
 
 const socialLinks: SocialLink[] = [
   {
-    href: "#",
+    href: "https://instagram.com/quicksite_ng",
+    label: "Instagram",
     icon: (props) => (
-      <svg
-        {...props}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
+      <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <rect width="20" height="20" x="2" y="2" rx="5" />
         <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
         <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
@@ -69,52 +61,33 @@ const socialLinks: SocialLink[] = [
     ),
   },
   {
-    href: "#",
+    href: "https://twitter.com/quicksite_ng",
+    label: "Twitter / X",
     icon: (props) => (
-      <svg
-        {...props}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
+      <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
       </svg>
     ),
   },
   {
-    href: "#",
+    href: "https://facebook.com/quicksite.ng",
+    label: "Facebook",
     icon: (props) => (
-      <svg
-        {...props}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
+      <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
       </svg>
     ),
   },
   {
-    href: "#",
+    href: "https://tiktok.com/@quicksite_ng",
+    label: "TikTok",
     icon: (props) => (
-      <svg
-        {...props}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-        <rect width="4" height="12" x="2" y="9" />
-        <circle cx="4" cy="4" r="2" />
+      <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
       </svg>
     ),
   },
 ];
-
-// --- Component ---
 
 const Footer: React.FC = () => {
   return (
@@ -140,11 +113,14 @@ const Footer: React.FC = () => {
             </p>
 
             <div className="flex gap-2">
-              {socialLinks.map((social, i) => (
+              {socialLinks.map((social) => (
                 <a
-                  key={i}
+                  key={social.label}
                   href={social.href}
-                  className="h-9 w-9 grid place-items-center border rounded-full hover:bg-primary/10 transition"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  className="h-9 w-9 grid place-items-center border rounded-full hover:bg-primary/10 hover:border-primary/40 transition"
                 >
                   <social.icon className="h-4 w-4" />
                 </a>
@@ -155,8 +131,8 @@ const Footer: React.FC = () => {
           {/* LINK GROUPS */}
           {footerNavigation.map((group) => (
             <div key={group.title}>
-              <h4 className="font-semibold text-sm mb-3">{group.title}</h4>
-              <ul className="space-y-2">
+              <h4 className="font-semibold text-sm mb-4">{group.title}</h4>
+              <ul className="space-y-2.5">
                 {group.links.map((link) => (
                   <li key={link.label}>
                     <Link
@@ -174,8 +150,12 @@ const Footer: React.FC = () => {
 
         {/* BOTTOM BAR */}
         <div className="mt-12 pt-6 border-t flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground gap-3">
-          <p>© {new Date().getFullYear()} QuickSite</p>
-          <p>Made in Lagos 🇳🇬</p>
+          <p>© {new Date().getFullYear()} QuickSite Technologies Ltd.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="hover:text-primary transition text-xs">Privacy</Link>
+            <Link href="/terms" className="hover:text-primary transition text-xs">Terms</Link>
+            <p className="text-xs">Made in Lagos 🇳🇬</p>
+          </div>
         </div>
       </div>
     </footer>

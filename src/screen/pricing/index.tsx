@@ -95,7 +95,7 @@ export default function PricingPage() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-2xl border p-6 flex flex-col transition hover:-translate-y-1 hover:shadow-xl $
+              className={`relative rounded-2xl border p-6 flex flex-col transition hover:-translate-y-1 hover:shadow-xl ${
                 plan.isPopular ? "border-primary shadow-lg" : "border-border"
               }`}
             >
@@ -120,7 +120,7 @@ export default function PricingPage() {
               <ul className="space-y-3 mb-6 flex-1">
                 {plan.features.map((f, i) => (
                   <li key={i} className="flex gap-2 text-sm">
-                    <Check className="w-4 h-4 text-primary mt-0.5" />
+                    <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                     {f}
                   </li>
                 ))}
@@ -128,7 +128,7 @@ export default function PricingPage() {
 
               <Link href="/signup">
                 <button
-                  className={`w-full py-2 rounded-full text-sm font-semibold transition $
+                  className={`w-full py-2 rounded-full text-sm font-semibold transition ${
                     plan.isPopular
                       ? "bg-primary text-white hover:opacity-90"
                       : "border border-border hover:bg-accent"
