@@ -14,9 +14,6 @@ import {
   Settings,
   LogOut,
   Plus,
-  Eye,
-  Edit3,
-  ExternalLink,
   TrendingUp,
   Users,
   MousePointerClick,
@@ -45,7 +42,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/signin");
+      router.push("/login");
     }
   }, [user, loading, router]);
 
