@@ -1,4 +1,5 @@
-import TemplatesPage from "@/screen/templates";
-export default function Templates() {
-  return <TemplatesPage />;
+// src/app/templates/page.tsx
+import TemplateGallery from "@/features/templates/TemplateGallery";
+export default function TemplatesPage() {
+  return <TemplateGallery />;
 }

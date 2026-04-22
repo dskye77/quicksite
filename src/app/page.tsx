@@ -1,6 +1,5 @@
-import Home from "@/screen/home";
+// src/app/page.tsx
+import HomeScreen from "@/features/home/HomeScreen";
 export default function Page() {
-  return (
-    <Home />
-  );
+  return <HomeScreen />;
 }

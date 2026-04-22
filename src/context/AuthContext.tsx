@@ -1,89 +1,114 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+// src/context/AuthContext.tsx
+// ─────────────────────────────────────────────────────────────────────────────
+// SINGLE auth source of truth for the entire app.
+// Backed by Firebase Auth. Replaces both the old mock AuthContext
+// and the old src/lib/useAuth.ts Firebase hook.
+// ─────────────────────────────────────────────────────────────────────────────
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
+import React, { createContext, useContext, useEffect, useState } from "react";
+import {
+  User,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  updateProfile,
+  AuthError,
+} from "firebase/auth";
+import { auth, googleProvider } from "@/lib/firebase";
+
+// ── Types ────────────────────────────────────────────────────────────────────
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  logOut: () => Promise<void>;
 }
+
+// ── Context ───────────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// ---------------------------------------------------------------------------
-// Mock auth helpers — swap these for real API calls (e.g. Supabase, Firebase)
-// ---------------------------------------------------------------------------
-const STORAGE_KEY = "qs_user";
+// ── Helper: human-readable Firebase errors ────────────────────────────────────
 
-function mockLogin(email: string, password: string): User {
-  // In production replace with a real API call
-  if (!email || !password) throw new Error("Invalid credentials.");
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    const parsed: User = JSON.parse(stored);
-    if (parsed.email === email) return parsed;
-  }
-  throw new Error("No account found. Please sign up first.");
+function friendlyError(err: unknown): string {
+  const code = (err as AuthError)?.code ?? "";
+  const map: Record<string, string> = {
+    "auth/user-not-found": "No account found with that email.",
+    "auth/wrong-password": "Incorrect password. Please try again.",
+    "auth/invalid-credential": "Invalid email or password.",
+    "auth/email-already-in-use": "An account with this email already exists.",
+    "auth/weak-password": "Password must be at least 6 characters.",
+    "auth/invalid-email": "Please enter a valid email address.",
+    "auth/too-many-requests": "Too many attempts. Please try again later.",
+    "auth/popup-closed-by-user": "Google sign-in was cancelled.",
+    "auth/network-request-failed": "Network error. Check your connection.",
+  };
+  return map[code] ?? (err instanceof Error ? err.message : "Something went wrong.");
 }
 
-function mockSignup(name: string, email: string): User {
-  // In production replace with a real API call
-  const user: User = { id: crypto.randomUUID(), name, email };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-  return user;
-}
-// ---------------------------------------------------------------------------
+// ── Provider ──────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Rehydrate session on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (stored) setUser(JSON.parse(stored));
-    } catch {
-      // ignore
-    } finally {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
       setLoading(false);
-    }
+    });
+    return unsubscribe;
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const loggedIn = mockLogin(email, password);
-    setUser(loggedIn);
+  const signIn = async (email: string, password: string) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      throw new Error(friendlyError(err));
+    }
   };
 
-  const signup = async (name: string, email: string, password: string) => {
-    if (!password) throw new Error("Password is required.");
-    const created = mockSignup(name, email);
-    setUser(created);
+  const signUp = async (name: string, email: string, password: string) => {
+    try {
+      const { user: newUser } = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(newUser, { displayName: name });
+      // Trigger a re-read so displayName is populated immediately
+      setUser({ ...newUser, displayName: name } as User);
+    } catch (err) {
+      throw new Error(friendlyError(err));
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setUser(null);
+  const signInWithGoogle = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      throw new Error(friendlyError(err));
+    }
+  };
+
+  const logOut = async () => {
+    await signOut(auth);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, logOut }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
+// ── Hook ──────────────────────────────────────────────────────────────────────
+
+export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
   return ctx;
 }

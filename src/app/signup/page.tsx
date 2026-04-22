@@ -1,4 +1,5 @@
-import SignupScreen from "@/screen/signup";
-export default function Signup() {
+// src/app/signup/page.tsx
+import SignupScreen from "@/features/auth/SignupScreen";
+export default function SignupPage() {
   return <SignupScreen />;
 }

@@ -1,9 +1,10 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/context/AuthContext";
-import Layout from "@/screen/layout";
+import RootLayoutShell from "@/components/layout/RootLayoutShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,14 +19,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "QuickSite — Your business online in minutes",
   description:
-    "Build a professional website for your business in minutes. No coding needed.",
+    "Build a professional website for your Nigerian business in minutes. No coding needed.",
+  keywords: ["website builder", "Nigeria", "small business", "online store"],
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html
       lang="en"
@@ -35,7 +37,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
-            <Layout>{children}</Layout>
+            <RootLayoutShell>{children}</RootLayoutShell>
           </AuthProvider>
         </ThemeProvider>
       </body>
