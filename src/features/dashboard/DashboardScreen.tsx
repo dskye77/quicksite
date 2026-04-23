@@ -135,7 +135,7 @@ export default function DashboardScreen() {
                 </div>
                 <p className="font-bold text-sm truncate">{site.name}</p>
                 <p className="text-xs text-primary mt-0.5 truncate">
-                  makesite.com.ng/{site.slug}
+                  makesite.com.ng/s/{site.slug}
                 </p>
                 <p className="text-xs text-muted-foreground mt-3">
                   {site.visits} visits

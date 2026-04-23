@@ -154,7 +154,7 @@ function SiteCard({ site }: { site: Site }) {
         </div>
 
         <a
-          href={`https://makesite.com.ng/${site.slug}`}
+          href={`https://makesite.com.ng/s/${site.slug}`}
           target="_blank"
           rel="noreferrer"
           className="text-xs text-primary hover:underline flex items-center gap-1 mb-4"
@@ -168,7 +168,7 @@ function SiteCard({ site }: { site: Site }) {
             <p>{site.whatsappClicks} WhatsApp clicks</p>
           </div>
           <div className="flex items-center gap-2">
-            <Link href={`/editor/${site.id}`}>
+            <Link href={`/editor/${site.slug}`}>
               <button
                 className="p-2 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary hover:text-white transition cursor-pointer"
                 title="Edit Site"

@@ -2,7 +2,7 @@
 "use client";
 
 // src/features/dashboard/DashboardLayoutScreen.tsx
-// Wired to Zustand for sidebar state + create modal.
+// Updated to link directly to the new site creation page.
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -10,7 +10,6 @@ import { useTheme } from "next-themes";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboardStore } from "@/store/useDashboardStore";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import {
   Zap,
   LayoutDashboard,
@@ -24,11 +23,6 @@ import {
   Menu,
 } from "lucide-react";
 
-const CreateSiteScreen = dynamic(
-  () => import("@/features/dashboard/create/CreateSiteScreen"),
-  { ssr: false }
-);
-
 const SIDEBAR_LINKS = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Globe, label: "My Sites", href: "/dashboard/sites" },
@@ -36,14 +30,18 @@ const SIDEBAR_LINKS = [
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 
-export default function DashboardLayoutScreen({ children }: { children: React.ReactNode }) {
+export default function DashboardLayoutScreen({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, logOut } = useAuth();
-  const { ui, setSidebarOpen, setCreateModal } = useDashboardStore();
+  const { ui, setSidebarOpen } = useDashboardStore(); // Removed setCreateModal
 
   useEffect(() => setMounted(true), []);
 
@@ -84,15 +82,12 @@ export default function DashboardLayoutScreen({ children }: { children: React.Re
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Create site modal */}
-      {ui.createModalOpen && (
-        <CreateSiteScreen onClose={() => setCreateModal(false)} />
-      )}
-
       {/* ── Sidebar ──────────────────────────────────────────────────── */}
       <aside
         className={`fixed lg:sticky top-0 h-screen z-40 flex flex-col w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300 shrink-0 ${
-          ui.sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          ui.sidebarOpen
+            ? "translate-x-0"
+            : "-translate-x-full lg:translate-x-0"
         }`}
       >
         <div className="p-5 border-b border-sidebar-border">
@@ -101,7 +96,9 @@ export default function DashboardLayoutScreen({ children }: { children: React.Re
               <Zap className="h-5 w-5 text-white fill-white" />
             </div>
             <div>
-              <p className="font-bold text-base text-sidebar-foreground">MakeSite</p>
+              <p className="font-bold text-base text-sidebar-foreground">
+                MakeSite
+              </p>
               <p className="text-[10px] text-muted-foreground">.com.ng</p>
             </div>
           </Link>
@@ -127,7 +124,9 @@ export default function DashboardLayoutScreen({ children }: { children: React.Re
         <div className="p-4 border-t border-sidebar-border space-y-4">
           <div className="bg-primary/10 rounded-xl p-4">
             <p className="text-xs font-semibold mb-1">Free Plan</p>
-            <p className="text-[11px] text-muted-foreground mb-3">Upgrade to remove branding.</p>
+            <p className="text-[11px] text-muted-foreground mb-3">
+              Upgrade to remove branding.
+            </p>
             <Link href="/pricing">
               <button className="w-full bg-primary text-primary-foreground rounded-lg text-xs font-semibold py-2 hover:opacity-90 transition cursor-pointer">
                 Upgrade Now
@@ -143,7 +142,9 @@ export default function DashboardLayoutScreen({ children }: { children: React.Re
               <p className="text-sm font-semibold truncate">
                 {user.displayName ?? "My Account"}
               </p>
-              <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {user.email}
+              </p>
             </div>
             <button
               onClick={handleLogout}
@@ -175,7 +176,9 @@ export default function DashboardLayoutScreen({ children }: { children: React.Re
               <Menu className="h-5 w-5" />
             </button>
             <div>
-              <h1 className="font-bold text-lg leading-tight capitalize">{pageTitle}</h1>
+              <h1 className="font-bold text-lg leading-tight capitalize">
+                {pageTitle}
+              </h1>
               <p className="text-xs text-muted-foreground hidden sm:block">
                 Welcome, {firstName} 👋
               </p>
@@ -185,7 +188,9 @@ export default function DashboardLayoutScreen({ children }: { children: React.Re
           <div className="flex items-center gap-2">
             {mounted && (
               <button
-                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                onClick={() =>
+                  setTheme(resolvedTheme === "dark" ? "light" : "dark")
+                }
                 className="text-muted-foreground hover:text-foreground p-2"
               >
                 {resolvedTheme === "dark" ? (
@@ -195,13 +200,15 @@ export default function DashboardLayoutScreen({ children }: { children: React.Re
                 )}
               </button>
             )}
-            <button
-              onClick={() => setCreateModal(true)}
+
+            {/* Swapped Modal Trigger for Direct Link */}
+            <Link
+              href="/dashboard/new"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full h-9 px-4 text-sm font-semibold hover:opacity-90 transition cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">New Site</span>
-            </button>
+            </Link>
           </div>
         </header>
 

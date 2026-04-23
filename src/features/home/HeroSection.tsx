@@ -96,7 +96,7 @@ export default function HeroSection() {
                 <div className="h-2.5 w-2.5 rounded-full bg-primary/50" />
               </div>
               <div className="flex-1 bg-background rounded-md h-5 text-[10px] flex items-center px-2 text-muted-foreground">
-                makesite.com.ng/amakachef
+                makesite.com.ng/s/amakachef
               </div>
             </div>
 
@@ -139,7 +139,7 @@ export default function HeroSection() {
             </div>
             <div>
               <p className="text-xs font-semibold">Site published!</p>
-              <p className="text-[10px] text-muted-foreground">makesite.com.ng/amakachef</p>
+              <p className="text-[10px] text-muted-foreground">makesite.com.ng/s/amakachef</p>
             </div>
           </div>
 

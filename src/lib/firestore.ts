@@ -1,7 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/lib/firestore.ts
-// ─────────────────────────────────────────────────────────────────────────────
-// Single file for every Firestore + Storage operation in the app.
-// Import from here — never write raw Firebase calls in components.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -20,17 +18,47 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import type { UserProfile, Site, DashboardStats } from "@/lib/types";
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Converts Firestore Timestamps to ISO strings to make data serializable
+ * for Next.js Client Components.
+ */
+function serializeData<T>(data: any): T {
+  if (!data) return data;
+
+  const serialized = { ...data };
+
+  Object.keys(serialized).forEach((key) => {
+    const value = serialized[key];
+    // Check if it's a Firestore Timestamp (has toDate method)
+    if (
+      value &&
+      typeof value === "object" &&
+      typeof value.toDate === "function"
+    ) {
+      serialized[key] = value.toDate().toISOString();
+    } else if (Array.isArray(value)) {
+      serialized[key] = value.map((item) =>
+        typeof item === "object" ? serializeData(item) : item,
+      );
+    }
+  });
+
+  return serialized as T;
+}
+
 // ── User Profile ─────────────────────────────────────────────────────────────
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, "users", uid));
   if (!snap.exists()) return null;
-  return snap.data() as UserProfile;
+  return serializeData<UserProfile>(snap.data());
 }
 
 export async function createOrUpdateUserProfile(
   uid: string,
-  data: Partial<Omit<UserProfile, "uid" | "createdAt">>
+  data: Partial<Omit<UserProfile, "uid" | "createdAt">>,
 ): Promise<void> {
   const docRef = doc(db, "users", uid);
   const snap = await getDoc(docRef);
@@ -51,7 +79,7 @@ export async function createOrUpdateUserProfile(
 
 export async function updateUserProfile(
   uid: string,
-  data: Partial<Omit<UserProfile, "uid" | "createdAt" | "updatedAt">>
+  data: Partial<Omit<UserProfile, "uid" | "createdAt" | "updatedAt">>,
 ): Promise<void> {
   await updateDoc(doc(db, "users", uid), {
     ...data,
@@ -59,7 +87,10 @@ export async function updateUserProfile(
   });
 }
 
-export async function uploadProfilePhoto(uid: string, file: File): Promise<string> {
+export async function uploadProfilePhoto(
+  uid: string,
+  file: File,
+): Promise<string> {
   const storageRef = ref(storage, `profile-photos/${uid}`);
   await uploadBytes(storageRef, file);
   return getDownloadURL(storageRef);
@@ -70,18 +101,37 @@ export async function uploadProfilePhoto(uid: string, file: File): Promise<strin
 export async function getUserSites(uid: string): Promise<Site[]> {
   const q = query(collection(db, "sites"), where("uid", "==", uid));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Site));
+  return snap.docs.map((d) => serializeData<Site>({ id: d.id, ...d.data() }));
 }
 
 export async function getSite(siteId: string): Promise<Site | null> {
+  if (!siteId) return null;
   const snap = await getDoc(doc(db, "sites", siteId));
   if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() } as Site;
+  return serializeData<Site>({ id: snap.id, ...snap.data() });
+}
+
+/**
+ * Fetches site data by slug. This is the primary function for the public /s/[slug] page.
+ */
+export async function getSiteBySlug(slug: string): Promise<Site | null> {
+  if (!slug) return null;
+
+  const q = query(collection(db, "sites"), where("slug", "==", slug));
+  const snap = await getDocs(q);
+
+  if (snap.empty) return null;
+
+  const d = snap.docs[0];
+  return serializeData<Site>({ id: d.id, ...d.data() });
 }
 
 export async function createSite(
   uid: string,
-  data: Omit<Site, "id" | "uid" | "visits" | "whatsappClicks" | "createdAt" | "updatedAt">
+  data: Omit<
+    Site,
+    "id" | "uid" | "visits" | "whatsappClicks" | "createdAt" | "updatedAt"
+  >,
 ): Promise<string> {
   const newRef = doc(collection(db, "sites"));
   await setDoc(newRef, {
@@ -96,9 +146,11 @@ export async function createSite(
 }
 
 export async function updateSite(
-  siteId: string,
-  data: Partial<Omit<Site, "id" | "uid" | "createdAt">>
+  slug: string,
+  data: Partial<Omit<Site, "id" | "uid" | "createdAt">>,
 ): Promise<void> {
+  const siteId = await getSiteIdBySlug(slug);
+  if (!siteId) throw new Error("Site not found for slug: " + slug);
   await updateDoc(doc(db, "sites", siteId), {
     ...data,
     updatedAt: serverTimestamp(),
@@ -109,7 +161,17 @@ export async function deleteSite(siteId: string): Promise<void> {
   await deleteDoc(doc(db, "sites", siteId));
 }
 
-export async function isSlugTaken(slug: string, excludeSiteId?: string): Promise<boolean> {
+export async function getSiteIdBySlug(slug: string): Promise<string | null> {
+  const q = query(collection(db, "sites"), where("slug", "==", slug));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return snap.docs[0].id;
+}
+
+export async function isSlugTaken(
+  slug: string,
+  excludeSiteId?: string,
+): Promise<boolean> {
   const q = query(collection(db, "sites"), where("slug", "==", slug));
   const snap = await getDocs(q);
   return snap.docs.some((d) => d.id !== excludeSiteId);
