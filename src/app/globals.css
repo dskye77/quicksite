@@ -95,7 +95,15 @@
   --sidebar-border: #1e293b;
   --sidebar-ring: #16a35a;
 }
-
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
 @layer base {
   * {
     @apply border-border outline-ring/50;

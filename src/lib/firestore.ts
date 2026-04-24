@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
+  addDoc,
   doc,
   getDoc,
   setDoc,
@@ -13,10 +14,17 @@ import {
   where,
   getDocs,
   serverTimestamp,
+  increment,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
-import type { UserProfile, Site, DashboardStats } from "@/lib/types";
+import type {
+  UserProfile,
+  Site,
+  DashboardStats,
+  AnalyticsEvent,
+  AnalyticsEventType,
+} from "@/lib/types";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -146,15 +154,23 @@ export async function createSite(
 }
 
 export async function updateSite(
+  siteId: string,
+  data: Partial<Omit<Site, "id" | "uid" | "createdAt">>,
+): Promise<void> {
+  if (!siteId) throw new Error("Site ID is required.");
+  await updateDoc(doc(db, "sites", siteId), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function updateSiteBySlug(
   slug: string,
   data: Partial<Omit<Site, "id" | "uid" | "createdAt">>,
 ): Promise<void> {
   const siteId = await getSiteIdBySlug(slug);
   if (!siteId) throw new Error("Site not found for slug: " + slug);
-  await updateDoc(doc(db, "sites", siteId), {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
+  await updateSite(siteId, data);
 }
 
 export async function deleteSite(siteId: string): Promise<void> {
@@ -186,4 +202,34 @@ export async function getDashboardStats(uid: string): Promise<DashboardStats> {
     totalWhatsappClicks: sites.reduce((a, s) => a + (s.whatsappClicks ?? 0), 0),
     totalSites: sites.length,
   };
+}
+
+export async function trackSiteEvent(
+  site: Pick<Site, "id" | "uid" | "slug">,
+  type: AnalyticsEventType,
+): Promise<void> {
+  const metricField = type === "visit" ? "visits" : "whatsappClicks";
+
+  await updateDoc(doc(db, "sites", site.id), {
+    [metricField]: increment(1),
+    updatedAt: serverTimestamp(),
+  });
+
+  await addDoc(collection(db, "analytics_events"), {
+    uid: site.uid,
+    siteId: site.id,
+    siteSlug: site.slug,
+    type,
+    createdAt: serverTimestamp(),
+  });
+}
+
+export async function getAnalyticsEventsForUser(
+  uid: string,
+): Promise<AnalyticsEvent[]> {
+  const q = query(collection(db, "analytics_events"), where("uid", "==", uid));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) =>
+    serializeData<AnalyticsEvent>({ id: d.id, ...d.data() }),
+  );
 }

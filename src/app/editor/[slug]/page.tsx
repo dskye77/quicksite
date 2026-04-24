@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { getSiteBySlug, updateSite } from "@/lib/firestore";
+import { getSiteBySlug, updateSiteBySlug } from "@/lib/firestore";
 import EditorScreen from "@/features/editor/EditorScreen";
 import { toast } from "sonner";
 import { Loader2, Save, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import type { Site } from "@/lib/types";
 
 interface PageProps {
   params: Promise<{
@@ -18,8 +19,7 @@ export default function SiteEditorPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const siteSlug = resolvedParams.slug;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [siteData, setSiteData] = useState<any>(null);
+  const [siteData, setSiteData] = useState<Site | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -52,7 +52,14 @@ export default function SiteEditorPage({ params }: PageProps) {
 
     setIsSaving(true);
     try {
-      await updateSite(siteSlug, siteData);
+      await updateSiteBySlug(siteSlug, {
+        name: siteData.name,
+        slug: siteData.slug,
+        type: siteData.type,
+        templateId: siteData.templateId,
+        status: siteData.status,
+        content: siteData.content,
+      });
       toast.success("All changes saved!");
     } catch (error) {
       console.error("Save Error:", error);

@@ -1,30 +1,33 @@
 "use client";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createSite, isSlugTaken } from "@/lib/firestore";
 import { useAuth } from "@/hooks/useAuth";
-import { templatePresets } from "@/assets/templatePresets";
-import { Layout, Globe, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  PRODUCTION_TEMPLATE_ID,
+  createTemplateOneStarterContent,
+  getTemplateMeta,
+} from "@/lib/templateCatalog";
+import { Layout, ArrowRight, CheckCircle2, Loader2, Eye } from "lucide-react";
 import { toast } from "sonner";
-
-const AVAILABLE_TEMPLATES = [
-  {
-    type: "template-1",
-    name: "Modern Hero",
-    description: "Clean, bold, and high-conversion.",
-  },
-  // Add more as you create them
-];
 
 export default function CreateSitePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
+  const templateFromQuery = searchParams.get("template");
+  const selectedTemplate =
+    templateFromQuery === PRODUCTION_TEMPLATE_ID
+      ? templateFromQuery
+      : PRODUCTION_TEMPLATE_ID;
+  const selectedTemplateMeta = getTemplateMeta(selectedTemplate);
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
-    type: "template-1",
+    type: selectedTemplate,
   });
 
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,24 +51,34 @@ export default function CreateSitePage() {
         return toast.error("This URL is already taken.");
       }
 
-      // 2. Get the Preset Data for the selected template
-      const presetData = templatePresets[formData.type] || {};
+      const normalizedName = formData.name.trim();
+      const normalizedSlug = formData.slug.trim();
 
-      // 3. Construct the Final Object
+      if (!normalizedName || !normalizedSlug) {
+        setLoading(false);
+        return toast.error("Please add both site name and URL slug.");
+      }
+
+      // 2. Create starter content that will be saved to Firebase
+      const content = createTemplateOneStarterContent(normalizedName);
+
+      // 3. Construct the final object
       const sitePayload = {
-        name: formData.name,
-        slug: formData.slug,
-        ...presetData, // Inject all default text/images from presets
-        updatedAt: new Date(),
+        name: normalizedName,
+        slug: normalizedSlug,
+        type: formData.type,
+        templateId: formData.type,
+        status: "draft" as const,
+        content,
       };
 
       // 4. Save to Firebase
-      const newSiteId = await createSite(user.uid, sitePayload);
+      await createSite(user.uid, sitePayload);
 
       toast.success("Site initialized!");
 
       // 5. Route to Editor
-      router.push(`/editor/${newSiteId}`);
+      router.push(`/editor/${normalizedSlug}`);
     } catch (error) {
       console.error(error);
       toast.error("Failed to create site.");
@@ -77,10 +90,10 @@ export default function CreateSitePage() {
     <div className="max-w-4xl mx-auto py-12 px-6">
       <div className="mb-10 text-center">
         <h1 className="text-4xl font-black tracking-tight">
-          Launch Something New
+          Launch Your Site
         </h1>
         <p className="text-slate-500 mt-2 text-lg">
-          Pick a name and a template to get started.
+          Start with a production-ready online catalogue template.
         </p>
       </div>
 
@@ -139,44 +152,36 @@ export default function CreateSitePage() {
 
         {/* Right: Template Picker */}
         <div className="space-y-4">
-          <p className="text-sm font-bold ml-1">Select Template</p>
+          <p className="text-sm font-bold ml-1">Template</p>
           <div className="grid gap-4">
-            {AVAILABLE_TEMPLATES.map((t) => (
-              <div
-                key={t.type}
-                onClick={() => setFormData({ ...formData, type: t.type })}
-                className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                  formData.type === t.type
-                    ? "border-primary bg-primary/5"
-                    : "border-slate-100 hover:border-slate-200"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white rounded-lg border shadow-sm">
-                    <Layout
-                      size={18}
-                      className={
-                        formData.type === t.type
-                          ? "text-primary"
-                          : "text-slate-400"
-                      }
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm">{t.name}</h3>
-                    <p className="text-[10px] text-slate-500">
-                      {t.description}
-                    </p>
-                  </div>
+            <div className="relative p-4 rounded-2xl border-2 border-primary bg-primary/5">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white rounded-lg border shadow-sm">
+                  <Layout size={18} className="text-primary" />
                 </div>
-                {formData.type === t.type && (
-                  <CheckCircle2
-                    className="absolute top-2 right-2 text-primary"
-                    size={16}
-                  />
-                )}
+                <div>
+                  <h3 className="font-bold text-sm">
+                    {selectedTemplateMeta?.title ?? "Production Template"}
+                  </h3>
+                  <p className="text-[10px] text-slate-500">
+                    {selectedTemplateMeta?.description ??
+                      "Ready-to-ship layout for catalogue sites."}
+                  </p>
+                </div>
               </div>
-            ))}
+              <CheckCircle2
+                className="absolute top-2 right-2 text-primary"
+                size={16}
+              />
+            </div>
+
+            <Link
+              href={`/templates/${formData.type}`}
+              className="h-10 inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white text-sm font-semibold hover:bg-slate-50 transition"
+            >
+              <Eye size={16} />
+              Preview Template
+            </Link>
           </div>
         </div>
       </form>

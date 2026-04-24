@@ -10,7 +10,6 @@ import {
   Plus,
   ExternalLink,
   Edit3,
-  MoreHorizontal,
   Search,
   Trash2,
   ToggleLeft,
@@ -80,17 +79,21 @@ function DeleteModal({ site, onClose }: { site: Site; onClose: () => void }) {
 
 function SiteCard({ site }: { site: Site }) {
   const { toggleSiteStatus, setDeleteConfirm } = useDashboardStore();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
 
+  // Handler for publish/unpublish button
   const handleToggle = async () => {
     setToggling(true);
-    setMenuOpen(false);
     try {
       await toggleSiteStatus(site.id, site.status);
     } finally {
       setToggling(false);
     }
+  };
+
+  // Handlers for Delete action, opens confirm modal
+  const handleDelete = () => {
+    setDeleteConfirm(site.id);
   };
 
   return (
@@ -114,43 +117,6 @@ function SiteCard({ site }: { site: Site }) {
       <div className="p-5">
         <div className="flex items-start justify-between mb-1">
           <h3 className="font-bold text-base truncate">{site.name}</h3>
-
-          {/* Context menu */}
-          <div className="relative">
-            <button
-              onClick={() => setMenuOpen((p) => !p)}
-              className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 top-full mt-1 w-44 bg-card border border-border rounded-xl shadow-xl z-20 overflow-hidden">
-                <button
-                  onClick={handleToggle}
-                  disabled={toggling}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted transition disabled:opacity-60"
-                >
-                  {toggling ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : site.status === "published" ? (
-                    <ToggleRight className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <ToggleLeft className="h-4 w-4 text-muted-foreground" />
-                  )}
-                  {site.status === "published" ? "Unpublish" : "Publish"}
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setDeleteConfirm(site.id);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition border-t border-border"
-                >
-                  <Trash2 className="h-4 w-4" /> Delete site
-                </button>
-              </div>
-            )}
-          </div>
         </div>
 
         <a
@@ -159,7 +125,7 @@ function SiteCard({ site }: { site: Site }) {
           rel="noreferrer"
           className="text-xs text-primary hover:underline flex items-center gap-1 mb-4"
         >
-          makesite.com.ng/{site.slug} <ExternalLink className="h-3 w-3" />
+          makesite.com.ng/s/{site.slug} <ExternalLink className="h-3 w-3" />
         </a>
 
         <div className="flex items-center justify-between pt-4 border-t border-border">
@@ -178,6 +144,37 @@ function SiteCard({ site }: { site: Site }) {
             </Link>
           </div>
         </div>
+        {/* Action buttons for Publish/Unpublish and Delete */}
+        <div className="flex items-center justify-between gap-3 mt-4">
+          <button
+            onClick={handleToggle}
+            disabled={toggling}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition disabled:opacity-70 ${
+              site.status === "published"
+                ? "bg-orange-500 text-white hover:bg-orange-600"
+                : "bg-emerald-500 text-white hover:bg-emerald-600"
+            }`}
+            title={site.status === "published" ? "Unpublish Site" : "Publish Site"}
+          >
+            {toggling ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : site.status === "published" ? (
+              <ToggleLeft className="h-4 w-4" />
+            ) : (
+              <ToggleRight className="h-4 w-4" />
+            )}
+            {site.status === "published" ? "Unpublish" : "Publish"}
+          </button>
+          <button
+            onClick={handleDelete}
+            className="flex items-center gap-2 px-4 py-2 rounded-md bg-destructive text-white text-sm font-medium hover:bg-destructive/80 transition disabled:opacity-70"
+            title="Delete Site"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </button>
+        </div>
+   
       </div>
     </div>
   );
@@ -186,8 +183,7 @@ function SiteCard({ site }: { site: Site }) {
 // ── Main Screen ───────────────────────────────────────────────────────────────
 
 export default function DashboardSiteScreen() {
-  const { sites, sitesLoading, ui, setCreateModal, setDeleteConfirm } =
-    useDashboardStore();
+  const { sites, sitesLoading, ui, setDeleteConfirm } = useDashboardStore();
   const [searchQuery, setSearchQuery] = useState("");
 
   const siteToDelete = ui.deleteConfirmId
@@ -222,12 +218,12 @@ export default function DashboardSiteScreen() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <button
-          onClick={() => setCreateModal(true)}
+        <Link
+          href="/dashboard/new"
           className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-full h-10 px-6 text-sm font-semibold hover:opacity-90 transition cursor-pointer"
         >
           <Plus className="h-4 w-4" /> Create New Site
-        </button>
+        </Link>
       </div>
 
       {/* Content */}
@@ -256,20 +252,21 @@ export default function DashboardSiteScreen() {
                 : "Create your first site and go live in minutes."}
             </p>
           </div>
-          <button
-            onClick={() =>
-              searchQuery ? setSearchQuery("") : setCreateModal(true)
-            }
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full h-11 px-8 text-sm font-semibold hover:opacity-90 transition mt-2 cursor-pointer"
-          >
-            {searchQuery ? (
-              "Clear Search"
-            ) : (
-              <>
-                <Plus className="h-4 w-4" /> Create Your First Site
-              </>
-            )}
-          </button>
+          {searchQuery ? (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full h-11 px-8 text-sm font-semibold hover:opacity-90 transition mt-2 cursor-pointer"
+            >
+              Clear Search
+            </button>
+          ) : (
+            <Link
+              href="/dashboard/new"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full h-11 px-8 text-sm font-semibold hover:opacity-90 transition mt-2 cursor-pointer"
+            >
+              <Plus className="h-4 w-4" /> Create Your First Site
+            </Link>
+          )}
         </div>
       )}
     </div>

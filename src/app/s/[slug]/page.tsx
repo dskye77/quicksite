@@ -1,7 +1,7 @@
 // app/s/[slug]/page.tsx
 
-import { getSiteBySlug } from "@/lib/firestore";
-import { getTemplateDisplay } from "@/lib/templates";
+import { getSiteBySlug, trackSiteEvent } from "@/lib/firestore";
+import { Template_1_Display } from "@/assets/siteTemplates/Template_1";
 import { notFound } from "next/navigation";
 
 export default async function PublicSite({
@@ -20,16 +20,21 @@ export default async function PublicSite({
 
   if (!siteData) notFound();
 
-  const DisplayComponent = getTemplateDisplay(siteData.type);
+  try {
+    await trackSiteEvent(siteData, "visit");
+  } catch (error) {
+    console.error("Failed to track visit:", error);
+  }
 
-  if (!DisplayComponent) {
+  const templateType = siteData.type || siteData.templateId;
+  if (templateType !== "template-1") {
     return (
       <div className="p-10 text-center">
         <h1 className="text-xl font-bold text-red-600">Configuration Error</h1>
-        <p>Template type &quot;{siteData.type}&quot; is not registered.</p>
+        <p>Template type &quot;{templateType}&quot; is not registered.</p>
       </div>
     );
   }
 
-  return <DisplayComponent data={siteData} />;
+  return <Template_1_Display data={siteData} />;
 }

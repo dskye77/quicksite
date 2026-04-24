@@ -1,10 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Template_1, { Template_1_Display } from "@/assets/siteTemplates/Template_1";
+import type { Site } from "@/lib/types";
 
 // Define the structure for our template registry
 interface TemplateRegistry {
-  component: React.ComponentType<{ data: any; onUpdate: (updates: any) => void }>;
-  display: React.ComponentType<{ data: any }>;
+  component: React.ComponentType<{
+    data: Site;
+    onUpdate: (updates: Partial<Site>) => void;
+  }>;
+  display: React.ComponentType<{ data: Site }>;
 }
 
 const TEMPLATE_MAP: Record<string, TemplateRegistry> = {

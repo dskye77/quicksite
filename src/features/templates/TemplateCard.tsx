@@ -1,14 +1,25 @@
 // src/features/templates/TemplateCard.tsx
+import Link from "next/link";
 import { Eye, ArrowRight } from "lucide-react";
 
 interface TemplateCardProps {
+  type: string;
   title: string;
   description: string;
   category: string;
+  previewHref: string;
+  useHref: string;
   delay?: number;
 }
 
-export function TemplateCard({ title, description, category, delay = 0 }: TemplateCardProps) {
+export function TemplateCard({
+  title,
+  description,
+  category,
+  previewHref,
+  useHref,
+  delay = 0,
+}: TemplateCardProps) {
   return (
     <div
       className="group rounded-2xl bg-card border border-border overflow-hidden hover:shadow-lg hover:border-primary/40 transition-all duration-300"
@@ -22,9 +33,12 @@ export function TemplateCard({ title, description, category, delay = 0 }: Templa
         </div>
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-all duration-300 grid place-items-center opacity-0 group-hover:opacity-100">
-          <button className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-4 rounded-full text-sm font-medium cursor-pointer">
+          <Link
+            href={previewHref}
+            className="flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-4 rounded-full text-sm font-medium cursor-pointer"
+          >
             <Eye className="w-4 h-4" /> Preview
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -32,12 +46,18 @@ export function TemplateCard({ title, description, category, delay = 0 }: Templa
         <h3 className="font-bold text-lg mb-1">{title}</h3>
         <p className="text-sm text-muted-foreground mb-4">{description}</p>
         <div className="flex gap-2">
-          <button className="flex-1 flex items-center justify-center gap-1.5 border border-input bg-background hover:bg-muted h-9 rounded-full text-sm font-medium cursor-pointer transition">
+          <Link
+            href={previewHref}
+            className="flex-1 flex items-center justify-center gap-1.5 border border-input bg-background hover:bg-muted h-9 rounded-full text-sm font-medium cursor-pointer transition"
+          >
             <Eye className="w-4 h-4" /> Preview
-          </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground hover:opacity-90 h-9 rounded-full text-sm font-semibold cursor-pointer transition">
+          </Link>
+          <Link
+            href={useHref}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground hover:opacity-90 h-9 rounded-full text-sm font-semibold cursor-pointer transition"
+          >
             Use Template <ArrowRight className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
       </div>
     </div>

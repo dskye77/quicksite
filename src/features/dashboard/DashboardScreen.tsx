@@ -39,8 +39,8 @@ const QUICK_ACTIONS = [
 ];
 
 export default function DashboardScreen() {
-  const { user } = useAuth();
-  const { sites, stats, sitesLoading, setCreateModal } = useDashboardStore();
+  useAuth();
+  const { sites, stats, sitesLoading } = useDashboardStore();
   const recentSites = sites.slice(0, 3);
 
   const STATS = [
@@ -154,12 +154,12 @@ export default function DashboardScreen() {
                 Create your first site and go live in minutes.
               </p>
             </div>
-            <button
-              onClick={() => setCreateModal(true)}
+            <Link
+              href="/dashboard/new"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full h-9 px-5 text-sm font-semibold hover:opacity-90 transition mt-1 cursor-pointer"
             >
               <Plus className="h-4 w-4" /> Create your first site
-            </button>
+            </Link>
           </div>
         )}
       </div>

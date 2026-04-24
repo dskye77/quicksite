@@ -1,17 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React from "react";
-import { getTemplateEditor } from "@/lib/templates";
+import Template_1 from "@/assets/siteTemplates/Template_1";
+import type { Site } from "@/lib/types";
 
 interface EditorScreenProps {
-  data: any;
-  onChange: (updated: any) => void;
+  data: Site;
+  onChange: (updated: Site) => void;
 }
 
 export default function EditorScreen({ data, onChange }: EditorScreenProps) {
-  const SelectedTemplate = getTemplateEditor(data.type);
-
-  if (!SelectedTemplate) {
+  if (data.type !== "template-1") {
     return (
       <div className="p-12 text-center bg-white rounded-xl border">
         <p className="text-red-500 font-bold">
@@ -21,13 +19,13 @@ export default function EditorScreen({ data, onChange }: EditorScreenProps) {
     );
   }
 
-  const handleUpdate = (updates: any) => {
+  const handleUpdate = (updates: Partial<Site>) => {
     onChange({ ...data, ...updates });
   };
 
   return (
     <div className="w-full h-full">
-      <SelectedTemplate data={data} onUpdate={handleUpdate} />
+      <Template_1 data={data} onUpdate={handleUpdate} />
     </div>
   );
 }
