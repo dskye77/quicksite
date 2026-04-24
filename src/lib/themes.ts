@@ -1,17 +1,17 @@
 // lib/themes.ts
 
 export type Theme = {
-    /** CSS class applied to the root wrapper div */
-    className: string;
-    /** Full CSS string injected via <style> — defines vars + utility classes */
-    css: string;
-    /** Font stack for the theme (used for reference / meta only) */
-    font: string;
-  };
-  
-  // ─── Shared utility-class CSS (appended to every theme) ────────────────────
-  // All utility classes reference CSS vars so they automatically adapt per theme.
-  const SHARED_UTILITIES = `
+  /** CSS class applied to the root wrapper div */
+  className: string;
+  /** Full CSS string injected via <style> — defines vars + utility classes */
+  css: string;
+  /** Font stack for the theme (used for reference / meta only) */
+  font: string;
+};
+
+// ─── Shared utility-class CSS (appended to every theme) ────────────────────
+// All utility classes reference CSS vars so they automatically adapt per theme.
+const SHARED_UTILITIES = `
     .qs-catalogue * { box-sizing: border-box; }
   
     .qs-catalogue .qs-badge {
@@ -124,12 +124,12 @@ export type Theme = {
       margin: 0;
     }
   `;
-  
-  // ─── THEME: Dark Gold (original Template-1 look) ───────────────────────────
-  export const darkGoldTheme: Theme = {
-    className: "qs-catalogue",
-    font: "Georgia, 'Times New Roman', serif",
-    css: `
+
+// ─── THEME: Dark Gold (original Template-1 look) ───────────────────────────
+export const darkGoldTheme: Theme = {
+  className: "qs-catalogue",
+  font: "Georgia, 'Times New Roman', serif",
+  css: `
     .qs-catalogue {
       --qs-bg:               #0a0a0a;
       --qs-surface:          #141414;
@@ -149,13 +149,13 @@ export type Theme = {
     }
     ${SHARED_UTILITIES}
     `,
-  };
-  
-  // ─── THEME: Light Minimal ──────────────────────────────────────────────────
-  export const lightMinimalTheme: Theme = {
-    className: "qs-catalogue",
-    font: "'DM Sans', sans-serif",
-    css: `
+};
+
+// ─── THEME: Light Minimal ──────────────────────────────────────────────────
+export const lightMinimalTheme: Theme = {
+  className: "qs-catalogue",
+  font: "'DM Sans', sans-serif",
+  css: `
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap');
     .qs-catalogue {
       --qs-bg:               #fafaf8;
@@ -176,13 +176,13 @@ export type Theme = {
     }
     ${SHARED_UTILITIES}
     `,
-  };
-  
-  // ─── THEME: Vibrant Purple ─────────────────────────────────────────────────
-  export const vibrantPurpleTheme: Theme = {
-    className: "qs-catalogue",
-    font: "'Syne', sans-serif",
-    css: `
+};
+
+// ─── THEME: Vibrant Purple ─────────────────────────────────────────────────
+export const vibrantPurpleTheme: Theme = {
+  className: "qs-catalogue",
+  font: "'Syne', sans-serif",
+  css: `
     @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&display=swap');
     .qs-catalogue {
       --qs-bg:               #0d0814;
@@ -203,13 +203,13 @@ export type Theme = {
     }
     ${SHARED_UTILITIES}
     `,
-  };
-  
-  // ─── THEME: Warm Earth (portfolio / services) ──────────────────────────────
-  export const warmEarthTheme: Theme = {
-    className: "qs-catalogue",
-    font: "'Cormorant Garamond', Georgia, serif",
-    css: `
+};
+
+// ─── THEME: Warm Earth (portfolio / services) ──────────────────────────────
+export const warmEarthTheme: Theme = {
+  className: "qs-catalogue",
+  font: "'Cormorant Garamond', Georgia, serif",
+  css: `
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@400;500;700&display=swap');
     .qs-catalogue {
       --qs-bg:               #f7f3ee;
@@ -230,4 +230,4 @@ export type Theme = {
     }
     ${SHARED_UTILITIES}
     `,
-  };
+};

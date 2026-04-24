@@ -1,7 +1,9 @@
 "use client";
 import React from "react";
-import Template_1 from "@/assets/siteTemplates/Template_1";
 import type { Site } from "@/lib/types";
+
+// Import the template registry
+import { templatesRegistry } from "@/assets/siteTemplates/templatesRegistry";
 
 interface EditorScreenProps {
   data: Site;
@@ -9,7 +11,9 @@ interface EditorScreenProps {
 }
 
 export default function EditorScreen({ data, onChange }: EditorScreenProps) {
-  if (data.type !== "template-1") {
+  const templateEntry = templatesRegistry[data.type];
+
+  if (!templateEntry || !templateEntry.editor) {
     return (
       <div className="p-12 text-center bg-white rounded-xl border">
         <p className="text-red-500 font-bold">
@@ -19,13 +23,16 @@ export default function EditorScreen({ data, onChange }: EditorScreenProps) {
     );
   }
 
+  const TemplateEditor = templateEntry.editor;
+
+  // Forwards changes upward to parent via `onChange`
   const handleUpdate = (updates: Partial<Site>) => {
     onChange({ ...data, ...updates });
   };
 
   return (
     <div className="w-full h-full">
-      <Template_1 data={data} onUpdate={handleUpdate} />
+      <TemplateEditor data={data} onUpdate={handleUpdate} />
     </div>
   );
 }

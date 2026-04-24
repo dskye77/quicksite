@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useRef, useEffect } from "react";
 import { Check, MessageCircle, X } from "lucide-react";
+
 interface WaFloatProps {
   number: string;
   ctaLabel: string;
@@ -23,8 +24,9 @@ export default function WaFloatButton({
 
   useEffect(() => {
     function handle(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node))
+      if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
+      }
     }
     document.addEventListener("mousedown", handle);
     return () => document.removeEventListener("mousedown", handle);
@@ -32,151 +34,85 @@ export default function WaFloatButton({
 
   const href = number ? `https://wa.me/${number.replace(/\D/g, "")}` : "#";
 
-  if (editable) {
-    return (
-      <div className="qs-whatsapp-float" ref={ref}>
-        {open && (
-          <div className="qs-phone-input-bubble">
-            <p
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#888",
-                fontFamily: "Georgia, serif",
-                marginBottom: 2,
-              }}
-            >
-              WHATSAPP NUMBER
-            </p>
-            <div style={{ display: "flex", gap: 6 }}>
-              <input
-                type="text"
-                value={localNum}
-                onChange={(e) => setLocalNum(e.target.value)}
-                placeholder="+234 800 000 0000"
-                style={{
-                  flex: 1,
-                  border: "1.5px solid #e0e0e0",
-                  borderRadius: 8,
-                  padding: "7px 10px",
-                  fontSize: 13,
-                  fontFamily: "Georgia, serif",
-                  outline: "none",
-                  color: "#111",
-                }}
-              />
-              <button
-                onClick={() => {
-                  onNumberChange?.(localNum);
-                  setOpen(false);
-                }}
-                style={{
-                  background: "#25d366",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "0 12px",
-                  cursor: "pointer",
-                  fontWeight: 700,
-                }}
-              >
-                <Check size={14} />
-              </button>
-            </div>
-            <p
-              style={{
-                fontSize: 10,
-                color: "#aaa",
-                fontFamily: "Georgia, serif",
-              }}
-            >
-              Customers will message this number
-            </p>
-          </div>
-        )}
-        <button
-          className="qs-wa-btn"
-          onClick={() => setOpen((p) => !p)}
-          style={{ boxShadow: "0 8px 32px rgba(37,211,102,0.4)" }}
-        >
-          <MessageCircle size={18} />
-          {ctaLabel || "Order on WhatsApp"}
-          <span style={{ fontSize: 10, opacity: 0.7, marginLeft: 4 }}>
-            {open ? "▲" : "▼"}
-          </span>
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="qs-whatsapp-float" ref={ref}>
+    <div
+      ref={ref}
+      className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3"
+    >
+      {/* Popup */}
       {open && (
-        <div className="qs-phone-input-bubble">
-          <p
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#333",
-              fontFamily: "Georgia, serif",
-            }}
-          >
-            Chat with us on WhatsApp
-          </p>
-          <p
-            style={{
-              fontSize: 12,
-              color: "#555",
-              fontFamily: "Georgia, serif",
-            }}
-          >
-            {number ? `+${number.replace(/\D/g, "")}` : "No number set"}
-          </p>
-          <a
-            href={href}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => setOpen(false)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              background: "#25d366",
-              color: "#fff",
-              borderRadius: 8,
-              padding: "8px 16px",
-              fontWeight: 700,
-              fontSize: 13,
-              textDecoration: "none",
-              fontFamily: "Georgia, serif",
-              justifyContent: "center",
-            }}
-          >
-            <MessageCircle size={15} /> Start Chat
-          </a>
+        <div className="relative w-[280px] rounded-xl bg-white shadow-2xl border border-gray-100 p-4">
+          {/* close */}
           <button
             onClick={() => setOpen(false)}
-            style={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "#aaa",
-            }}
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
           >
-            <X size={14} />
+            <X size={16} />
           </button>
+
+          {editable ? (
+            <>
+              <p className="text-[11px] font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                WhatsApp Number
+              </p>
+
+              <div className="flex gap-2">
+                <input
+                  value={localNum}
+                  onChange={(e) => setLocalNum(e.target.value)}
+                  placeholder="+234 800 000 0000"
+                  className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-400"
+                />
+
+                <button
+                  onClick={() => {
+                    onNumberChange?.(localNum);
+                    setOpen(false);
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white rounded-lg px-3 flex items-center justify-center"
+                >
+                  <Check size={16} />
+                </button>
+              </div>
+
+              <p className="text-[10px] text-gray-400 mt-2">
+                Customers will message this number
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-semibold text-gray-800">
+                Chat with us on WhatsApp
+              </p>
+
+              <p className="text-sm text-gray-500 mt-1">
+                {number ? `+${number.replace(/\D/g, "")}` : "No number set"}
+              </p>
+
+              <a
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setOpen(false)}
+                className="mt-3 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white rounded-lg px-4 py-2 text-sm font-semibold"
+              >
+                <MessageCircle size={16} />
+                Start Chat
+              </a>
+            </>
+          )}
         </div>
       )}
+
+      {/* Floating Button */}
       <button
-        className="qs-wa-btn"
         onClick={() => setOpen((p) => !p)}
-        style={{ boxShadow: "0 8px 32px rgba(37,211,102,0.4)" }}
+        className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-full shadow-2xl z-[9999]"
       >
         <MessageCircle size={18} />
-        {ctaLabel || "Order on WhatsApp"}
+        <span className="text-sm font-semibold">
+          {ctaLabel || "Order on WhatsApp"}
+        </span>
       </button>
     </div>
   );

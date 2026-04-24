@@ -20,7 +20,7 @@ export interface Site {
   uid: string;
   name: string;
   slug: string; // makesite.com.ng/<slug>
-  type?: string;
+  type: string;
   templateId: string;
   status: SiteStatus;
   visits: number;

@@ -1,5 +1,4 @@
 // components/templates/template-1.tsx
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { useState } from "react";
@@ -20,8 +19,6 @@ import { toast } from "sonner";
 import { trackSiteEvent } from "@/lib/firestore";
 import type { CatalogueItem, Site, TemplateOneContent } from "@/lib/types";
 import WaFloatButton from "@/components/shared/WaFloatButton";
-import { createTemplate } from "@/lib/createTemplate";
-import type { EditorBodyProps, DisplayBodyProps } from "@/lib/createTemplate";
 import { darkGoldTheme } from "@/lib/themes";
 
 // ─── 1. Normalize ──────────────────────────────────────────────────────────
@@ -38,7 +35,7 @@ function normalizeContent(site: Site): TemplateOneContent {
     whatsappNumber: raw?.whatsappNumber ?? "",
     ctaLabel: raw?.ctaLabel ?? "Order on WhatsApp",
     items:
-      raw?.items && raw.items.length > 0
+      Array.isArray(raw?.items) && raw.items.length > 0
         ? raw.items
         : [
             {
@@ -70,31 +67,13 @@ function CatalogueNav({
 }) {
   return (
     <nav
+      className={`flex items-center justify-between border-b border-(--qs-border) px-8 py-5 ${!editable && "sticky z-50"}bg-[rgba(10,10,10,0.92) backdrop-blur-md`}
       style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "20px 32px",
-        borderBottom: "1px solid var(--qs-border)",
-        position: "sticky",
-        top: editable ? 37 : 0, // offset for editor banner height
-        background: "rgba(10,10,10,0.92)",
-        backdropFilter: "blur(12px)",
-        zIndex: 50,
+        top: editable ? 37 : 0,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            background: "var(--qs-accent)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-(--qs-accent) flex items-center justify-center">
           <ShoppingBag size={18} color="var(--qs-accent-fg, #000)" />
         </div>
         {editable ? (
@@ -102,30 +81,21 @@ function CatalogueNav({
             contentEditable
             suppressContentEditableWarning
             onBlur={(e) => onBrandBlur?.(e.currentTarget.innerText)}
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              fontFamily: "var(--qs-font)",
-              cursor: "text",
-              outline: "none",
-            }}
+            className="text-[20px] font-bold font-sans cursor-text outline-none"
             data-placeholder="Brand Name"
+            style={{ fontFamily: "var(--qs-font)" }}
           >
             {brandName}
           </span>
         ) : (
           <span
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              fontFamily: "var(--qs-font)",
-            }}
+            className="text-[20px] font-bold font-sans"
+            style={{ fontFamily: "var(--qs-font)" }}
           >
             {brandName}
           </span>
         )}
       </div>
-
       {editable ? (
         <span className="qs-badge">✦ Editor</span>
       ) : (
@@ -134,21 +104,8 @@ function CatalogueNav({
           target="_blank"
           rel="noreferrer"
           onClick={onWaClick}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            background: "transparent",
-            color: "var(--qs-wa)",
-            border: "1px solid var(--qs-wa)",
-            borderRadius: 999,
-            padding: "6px 16px",
-            fontWeight: 600,
-            fontSize: 13,
-            textDecoration: "none",
-            fontFamily: "var(--qs-font)",
-            transition: "all 0.15s",
-          }}
+          className="inline-flex items-center gap-1.5 border border-(--qs-wa) rounded-full px-4 py-1.5 font-semibold text-[13px] text-(--qs-wa) hover:bg-(--qs-wa) hover:text-white transition-all"
+          style={{ fontFamily: "var(--qs-font)" }}
         >
           <MessageCircle size={14} /> WhatsApp
         </a>
@@ -172,24 +129,10 @@ function CatalogueFooter({
   onWaBlur?: (val: string) => void;
 }) {
   return (
-    <footer
-      style={{
-        padding: "32px",
-        borderTop: "1px solid var(--qs-border)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        flexWrap: "wrap",
-        gap: 16,
-        background: "var(--qs-surface)",
-      }}
-    >
+    <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-(--qs-border) px-8 py-8 bg-(--qs-surface)">
       <p
-        style={{
-          fontSize: 13,
-          color: "var(--qs-muted)",
-          fontFamily: "var(--qs-font)",
-        }}
+        className="text-[13px] text-(--qs-muted) font-sans"
+        style={{ fontFamily: "var(--qs-font)" }}
       >
         © {new Date().getFullYear()}{" "}
         {editable ? (
@@ -197,17 +140,23 @@ function CatalogueFooter({
             contentEditable
             suppressContentEditableWarning
             onBlur={(e) => onBrandBlur?.(e.currentTarget.innerText)}
-            style={{ color: "var(--qs-text)", cursor: "text", outline: "none" }}
+            className="text-(--qs-text) cursor-text outline-none"
+            style={{ fontFamily: "var(--qs-font)" }}
           >
             {brandName}
           </span>
         ) : (
-          <span style={{ color: "var(--qs-text)" }}>{brandName}</span>
+          <span
+            className="text-(--qs-text)"
+            style={{ fontFamily: "var(--qs-font)" }}
+          >
+            {brandName}
+          </span>
         )}
         . All rights reserved.
       </p>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="flex items-center gap-2">
         {editable ? (
           <>
             <Phone size={13} color="var(--qs-wa)" />
@@ -217,13 +166,8 @@ function CatalogueFooter({
               onBlur={(e) =>
                 onWaBlur?.(e.currentTarget.innerText.replace(/\D/g, ""))
               }
-              style={{
-                fontSize: 13,
-                color: "var(--qs-muted)",
-                cursor: "text",
-                outline: "none",
-                fontFamily: "var(--qs-font)",
-              }}
+              className="text-[13px] text-(--qs-muted) cursor-text outline-none font-sans"
+              style={{ fontFamily: "var(--qs-font)" }}
               data-placeholder="WhatsApp number"
             >
               {waNumber || "Add number"}
@@ -231,20 +175,10 @@ function CatalogueFooter({
           </>
         ) : (
           <>
-            <div
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "var(--qs-wa)",
-              }}
-            />
+            <div className="w-1.5 h-1.5 rounded-full bg-(--qs-wa)" />
             <span
-              style={{
-                fontSize: 12,
-                color: "var(--qs-muted)",
-                fontFamily: "var(--qs-font)",
-              }}
+              className="text-[12px] text-(--qs-muted) font-sans"
+              style={{ fontFamily: "var(--qs-font)" }}
             >
               Available on WhatsApp
             </span>
@@ -262,48 +196,22 @@ function HowToOrder({
   steps: { n: number; title: string; desc: string }[];
 }) {
   return (
-    <section
-      style={{
-        padding: "64px 32px",
-        borderTop: "1px solid var(--qs-border)",
-        maxWidth: 900,
-        margin: "0 auto",
-      }}
-    >
-      <p className="qs-section-label" style={{ marginBottom: 24 }}>
-        — How to Order
-      </p>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: 32,
-        }}
-      >
+    <section className="py-16 px-8 border-t border-(--qs-border) max-w-3xl mx-auto">
+      <p className="qs-section-label mb-6">— How to Order</p>
+      <div className="grid gap-8 grid-cols-[repeat(auto-fit,minmax(200px,1fr))">
         {steps.map((step) => (
-          <div
-            key={step.n}
-            style={{ display: "flex", gap: 16, alignItems: "flex-start" }}
-          >
+          <div key={step.n} className="flex gap-4 items-start">
             <div className="qs-number-badge">{step.n}</div>
             <div>
               <p
-                style={{
-                  fontWeight: 700,
-                  marginBottom: 6,
-                  fontSize: 15,
-                  fontFamily: "var(--qs-font)",
-                }}
+                className="font-bold mb-1.5 text-[15px] font-sans"
+                style={{ fontFamily: "var(--qs-font)" }}
               >
                 {step.title}
               </p>
               <p
-                style={{
-                  fontSize: 13,
-                  color: "var(--qs-muted)",
-                  lineHeight: 1.6,
-                  fontFamily: "var(--qs-font)",
-                }}
+                className="text-[13px] text-(--qs-muted) leading-relaxed font-sans"
+                style={{ fontFamily: "var(--qs-font)" }}
               >
                 {step.desc}
               </p>
@@ -335,11 +243,38 @@ const ORDER_STEPS = [
 
 // ─── 3. Editor Body ────────────────────────────────────────────────────────
 
+interface EditorBodyProps<T> {
+  content: T;
+  updateContent: (updates: Partial<T>) => void;
+  data: Site;
+}
+
+interface DisplayBodyProps<T> {
+  content: T;
+  data: Site;
+}
+
 function EditorBody({
   content,
   updateContent,
   data,
 }: EditorBodyProps<TemplateOneContent>) {
+  // Defensive: Ensure content and content.items are always defined.
+  const safeContent: TemplateOneContent = {
+    ...content,
+    items: Array.isArray(content?.items)
+      ? content.items
+      : [
+          {
+            id: "item-1",
+            name: "Featured Product",
+            price: "₦0",
+            description: "Add product details in the editor.",
+            image: "",
+          },
+        ],
+  };
+
   const [isUploading, setIsUploading] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
@@ -368,7 +303,7 @@ function EditorBody({
         throw new Error(result.error || "Upload failed.");
 
       updateContent({
-        items: content.items.map((item) =>
+        items: safeContent.items.map((item: CatalogueItem) =>
           item.id === itemId ? { ...item, image: result.secureUrl } : item,
         ),
       });
@@ -384,7 +319,7 @@ function EditorBody({
   const addItem = () =>
     updateContent({
       items: [
-        ...content.items,
+        ...safeContent.items,
         {
           id: crypto.randomUUID(),
           name: "New Product",
@@ -396,56 +331,44 @@ function EditorBody({
     });
 
   const removeItem = (id: string) =>
-    updateContent({ items: content.items.filter((i) => i.id !== id) });
+    updateContent({ items: safeContent.items.filter((i: CatalogueItem) => i.id !== id) });
 
   const updateItem = (id: string, field: keyof CatalogueItem, value: string) =>
     updateContent({
-      items: content.items.map((i) =>
+      items: safeContent.items.map((i: CatalogueItem) =>
         i.id === id ? { ...i, [field]: value } : i,
       ),
     });
 
-  const filtered = content.items.filter(
-    (i) => !search || i.name.toLowerCase().includes(search.toLowerCase()),
+  const filtered = safeContent.items.filter(
+    (i: CatalogueItem) => !search || i.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
     <>
       {/* Nav */}
       <CatalogueNav
-        brandName={content.brandName}
-        waNumber={content.whatsappNumber}
+        brandName={safeContent.brandName}
+        waNumber={safeContent.whatsappNumber}
         editable
         onBrandBlur={(v) => updateContent({ brandName: v })}
       />
 
       {/* Hero */}
-      <section
-        style={{
-          padding: "64px 32px 48px",
-          maxWidth: 900,
-          margin: "0 auto",
-        }}
-      >
-        <p className="qs-section-label" style={{ marginBottom: 16 }}>
-          — Catalogue
-        </p>
+      <section className="pt-16 pb-12 px-8 max-w-3xl mx-auto">
+        <p className="qs-section-label mb-4">— Catalogue</p>
         <h1
           contentEditable
           suppressContentEditableWarning
           onBlur={(e) => updateContent({ headline: e.currentTarget.innerText })}
+          className="font-extrabold leading-tight mb-4 cursor-text outline-none font-sans"
           style={{
-            fontSize: "clamp(32px, 5vw, 60px)",
-            fontWeight: 800,
-            lineHeight: 1.1,
-            marginBottom: 16,
-            cursor: "text",
-            outline: "none",
             fontFamily: "var(--qs-font)",
+            fontSize: "clamp(32px, 5vw, 60px)",
           }}
           data-placeholder="Your Headline"
         >
-          {content.headline}
+          {safeContent.headline}
         </h1>
         <p
           contentEditable
@@ -453,48 +376,27 @@ function EditorBody({
           onBlur={(e) =>
             updateContent({ subheadline: e.currentTarget.innerText })
           }
-          style={{
-            fontSize: 18,
-            color: "var(--qs-muted)",
-            lineHeight: 1.6,
-            maxWidth: 600,
-            cursor: "text",
-            outline: "none",
-            fontFamily: "var(--qs-font)",
-          }}
+          className="text-lg text-(--qs-muted) leading-relaxed max-w-xl cursor-text outline-none font-sans"
+          style={{ fontFamily: "var(--qs-font)" }}
           data-placeholder="Subheadline"
         >
-          {content.subheadline}
+          {safeContent.subheadline}
         </p>
 
-        {/* Stats */}
-        <div
-          style={{ display: "flex", gap: 32, marginTop: 32, flexWrap: "wrap" }}
-        >
+        <div className="flex gap-8 mt-8 flex-wrap">
           {[
-            { n: content.items.length, label: "Products" },
+            { n: safeContent.items.length, label: "Products" },
             { n: "Free", label: "Delivery" },
             { n: "24h", label: "Response" },
           ].map(({ n, label }) => (
             <div key={label}>
               <div
-                style={{
-                  fontSize: 24,
-                  fontWeight: 800,
-                  color: "var(--qs-accent)",
-                  fontFamily: "var(--qs-font)",
-                }}
+                className="text-2xl font-extrabold text-(--qs-accent) font-sans"
+                style={{ fontFamily: "var(--qs-font)" }}
               >
                 {n}
               </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "var(--qs-muted)",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                }}
-              >
+              <div className="text-xs text-(--qs-muted) uppercase tracking-wide">
                 {label}
               </div>
             </div>
@@ -505,78 +407,31 @@ function EditorBody({
       <div className="qs-divider" />
 
       {/* Toolbar */}
-      <div
-        style={{
-          padding: "16px 32px",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-          background: "var(--qs-surface)",
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-            minWidth: 200,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            background: "var(--qs-surface2)",
-            border: "1px solid var(--qs-border)",
-            borderRadius: 8,
-            padding: "8px 14px",
-          }}
-        >
+      <div className="flex flex-wrap items-center gap-3 px-8 py-4 bg-(--qs-surface)">
+        <div className="flex-1 min-w-[200px] flex items-center gap-2 bg-(--qs-surface2) border border-(--qs-border) rounded-lg px-[14px] py-2">
           <Search size={14} color="var(--qs-muted)" />
           <input
             type="text"
             placeholder="Search products..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              background: "none",
-              border: "none",
-              outline: "none",
-              color: "var(--qs-text)",
-              fontSize: 13,
-              fontFamily: "var(--qs-font)",
-              width: "100%",
-            }}
+            className="bg-transparent border-0 outline-none text-(--qs-text) text-[13px] font-sans w-full"
+            style={{ fontFamily: "var(--qs-font)" }}
           />
         </div>
         <button
           onClick={addItem}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            background: "var(--qs-accent)",
-            color: "var(--qs-accent-fg, #000)",
-            border: "none",
-            borderRadius: 8,
-            padding: "9px 16px",
-            fontWeight: 700,
-            fontSize: 13,
-            cursor: "pointer",
-            fontFamily: "var(--qs-font)",
-          }}
+          className="inline-flex items-center gap-1.5 bg-(--qs-accent) text-(--qs-accent-fg,#000) border-0 rounded-lg px-4 py-2.5 font-bold text-[13px] cursor-pointer font-sans"
+          style={{ fontFamily: "var(--qs-font)" }}
         >
           <Plus size={14} /> Add Product
         </button>
       </div>
 
       {/* Product grid */}
-      <section style={{ padding: "32px", maxWidth: 1200, margin: "0 auto" }}>
-        <div
-          className="qs-product-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-            gap: 20,
-          }}
-        >
-          {filtered.map((item, idx) => (
+      <section className="px-8 py-8 max-w-6xl mx-auto">
+        <div className="qs-product-grid grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5">
+          {filtered.map((item: CatalogueItem, idx: number) => (
             <EditorProductCard
               key={item.id}
               item={item}
@@ -589,41 +444,19 @@ function EditorBody({
           ))}
         </div>
         {filtered.length === 0 && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "64px 0",
-              color: "var(--qs-muted)",
-            }}
-          >
-            <ShoppingBag
-              size={40}
-              style={{ margin: "0 auto 16px", opacity: 0.3 }}
-            />
-            <p style={{ fontFamily: "var(--qs-font)" }}>No products found</p>
+          <div className="text-center py-16 text-(--qs-muted)">
+            <ShoppingBag size={40} className="mx-auto mb-4 opacity-30" />
+            <p className="font-sans" style={{ fontFamily: "var(--qs-font)" }}>
+              No products found
+            </p>
           </div>
         )}
       </section>
 
       {/* How It Works (condensed for editor) */}
-      <section
-        style={{
-          padding: "48px 32px",
-          borderTop: "1px solid var(--qs-border)",
-          maxWidth: 900,
-          margin: "0 auto",
-        }}
-      >
-        <p className="qs-section-label" style={{ marginBottom: 20 }}>
-          — How It Works
-        </p>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: 24,
-          }}
-        >
+      <section className="py-12 px-8 border-t border-(--qs-border) max-w-3xl mx-auto">
+        <p className="qs-section-label mb-5">— How It Works</p>
+        <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(200px,1fr))">
           {[
             {
               n: 1,
@@ -641,29 +474,18 @@ function EditorBody({
               desc: "We confirm your order and arrange fast delivery.",
             },
           ].map((step) => (
-            <div
-              key={step.n}
-              style={{ display: "flex", gap: 16, alignItems: "flex-start" }}
-            >
+            <div key={step.n} className="flex gap-4 items-start">
               <div className="qs-number-badge">{step.n}</div>
               <div>
                 <p
-                  style={{
-                    fontWeight: 700,
-                    marginBottom: 4,
-                    fontSize: 15,
-                    fontFamily: "var(--qs-font)",
-                  }}
+                  className="font-bold mb-1 text-[15px] font-sans"
+                  style={{ fontFamily: "var(--qs-font)" }}
                 >
                   {step.title}
                 </p>
                 <p
-                  style={{
-                    fontSize: 13,
-                    color: "var(--qs-muted)",
-                    lineHeight: 1.5,
-                    fontFamily: "var(--qs-font)",
-                  }}
+                  className="text-[13px] text-(--qs-muted) leading-snug font-sans"
+                  style={{ fontFamily: "var(--qs-font)" }}
                 >
                   {step.desc}
                 </p>
@@ -675,8 +497,8 @@ function EditorBody({
 
       {/* Footer */}
       <CatalogueFooter
-        brandName={content.brandName}
-        waNumber={content.whatsappNumber}
+        brandName={safeContent.brandName}
+        waNumber={safeContent.whatsappNumber}
         editable
         onBrandBlur={(v) => updateContent({ brandName: v })}
         onWaBlur={(v) => updateContent({ whatsappNumber: v })}
@@ -684,8 +506,8 @@ function EditorBody({
 
       {/* Floating WA — editable */}
       <WaFloatButton
-        number={content.whatsappNumber}
-        ctaLabel={content.ctaLabel}
+        number={safeContent.whatsappNumber}
+        ctaLabel={safeContent.ctaLabel}
         editable
         onNumberChange={(v) =>
           updateContent({ whatsappNumber: v.replace(/\D/g, "") })
@@ -699,6 +521,21 @@ function EditorBody({
 // ─── 4. Display Body ───────────────────────────────────────────────────────
 
 function DisplayBody({ content, data }: DisplayBodyProps<TemplateOneContent>) {
+  // Defensive: Ensure content and content.items are always defined.
+  const safeContent: TemplateOneContent = {
+    ...content,
+    items: Array.isArray(content?.items)
+      ? content.items
+      : [
+          {
+            id: "item-1",
+            name: "Featured Product",
+            price: "₦0",
+            description: "Add product details in the editor.",
+            image: "",
+          },
+        ],
+  };
   const [search, setSearch] = useState("");
   const [featured, setFeatured] = useState<string | null>(null);
 
@@ -710,116 +547,65 @@ function DisplayBody({ content, data }: DisplayBodyProps<TemplateOneContent>) {
     }
   };
 
-  const filtered = content.items.filter(
-    (i) => !search || i.name.toLowerCase().includes(search.toLowerCase()),
+  const filtered = safeContent.items.filter(
+    (i: CatalogueItem) => !search || i.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   const featuredItem = featured
-    ? content.items.find((i) => i.id === featured)
-    : content.items[0];
+    ? safeContent.items.find((i: CatalogueItem) => i.id === featured)
+    : safeContent.items[0];
 
   return (
     <>
       {/* Nav */}
       <CatalogueNav
-        brandName={content.brandName}
-        waNumber={content.whatsappNumber}
+        brandName={safeContent.brandName}
+        waNumber={safeContent.whatsappNumber}
         onWaClick={handleWhatsappClick}
       />
 
       {/* Hero split */}
       {featuredItem && (
-        <section
-          className="qs-hero-split"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            minHeight: 480,
-          }}
-        >
+        <section className="qs-hero-split grid grid-cols-2 min-h-[480px]">
           {/* Left text */}
-          <div
-            style={{
-              padding: "64px 48px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              borderRight: "1px solid var(--qs-border)",
-            }}
-          >
-            <p className="qs-section-label" style={{ marginBottom: 16 }}>
-              Featured
-            </p>
+          <div className="flex flex-col justify-center border-r border-(--qs-border) px-12 py-16">
+            <p className="qs-section-label mb-4">Featured</p>
             <h1
+              className="font-extrabold leading-tight mb-4 font-sans"
               style={{
-                fontSize: "clamp(28px, 4vw, 52px)",
-                fontWeight: 800,
-                lineHeight: 1.1,
-                marginBottom: 16,
                 fontFamily: "var(--qs-font)",
+                fontSize: "clamp(28px, 4vw, 52px)",
               }}
             >
-              {content.headline}
+              {safeContent.headline}
             </h1>
             <p
-              style={{
-                fontSize: 16,
-                color: "var(--qs-muted)",
-                lineHeight: 1.6,
-                marginBottom: 32,
-                fontFamily: "var(--qs-font)",
-              }}
+              className="text-[16px] text-(--qs-muted) leading-relaxed mb-8 font-sans"
+              style={{ fontFamily: "var(--qs-font)" }}
             >
-              {content.subheadline}
+              {safeContent.subheadline}
             </p>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div className="flex gap-3 flex-wrap">
               <div>
                 <div
-                  style={{
-                    fontSize: 28,
-                    fontWeight: 800,
-                    color: "var(--qs-accent)",
-                    fontFamily: "var(--qs-font)",
-                  }}
+                  className="text-[28px] font-extrabold text-(--qs-accent) font-sans"
+                  style={{ fontFamily: "var(--qs-font)" }}
                 >
-                  {content.items.length}
+                  {safeContent.items.length}
                 </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "var(--qs-muted)",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                  }}
-                >
+                <div className="text-xs text-(--qs-muted) uppercase tracking-wide">
                   Products
                 </div>
               </div>
-              <div
-                style={{
-                  margin: "0 8px",
-                  borderLeft: "1px solid var(--qs-border)",
-                }}
-              />
+              <div className="mx-2 border-l border-(--qs-border)"></div>
               <div>
                 <div
-                  style={{
-                    fontSize: 28,
-                    fontWeight: 800,
-                    color: "var(--qs-accent2)",
-                    fontFamily: "var(--qs-font)",
-                  }}
+                  className="text-[28px] font-extrabold text-(--qs-accent2) font-sans"
+                  style={{ fontFamily: "var(--qs-font)" }}
                 >
                   WA
                 </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "var(--qs-muted)",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                  }}
-                >
+                <div className="text-xs text-(--qs-muted) uppercase tracking-wide">
                   Orders
                 </div>
               </div>
@@ -827,79 +613,36 @@ function DisplayBody({ content, data }: DisplayBodyProps<TemplateOneContent>) {
           </div>
 
           {/* Right image */}
-          <div
-            style={{
-              position: "relative",
-              overflow: "hidden",
-              background: "var(--qs-surface)",
-            }}
-          >
+          <div className="relative overflow-hidden bg-(--qs-surface)">
             {featuredItem.image ? (
               <img
                 src={featuredItem.image}
                 alt={featuredItem.name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                className="w-full h-full object-cover"
               />
             ) : (
-              <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ShoppingBag size={64} style={{ opacity: 0.15 }} />
+              <div className="w-full h-full flex items-center justify-center">
+                <ShoppingBag size={64} className="opacity-15" />
               </div>
             )}
             {/* Price tag */}
             <div
-              style={{
-                position: "absolute",
-                top: 24,
-                right: 24,
-                background: "var(--qs-accent)",
-                color: "var(--qs-accent-fg, #000)",
-                padding: "8px 16px",
-                borderRadius: 8,
-                fontWeight: 800,
-                fontSize: 20,
-                fontFamily: "var(--qs-font)",
-              }}
+              className="absolute top-6 right-6 bg-(--qs-accent) text-(--qs-accent-fg,#000) py-2 px-4 rounded-lg font-extrabold text-[20px] font-sans"
+              style={{ fontFamily: "var(--qs-font)" }}
             >
               {featuredItem.price}
             </div>
             {/* Name tag */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: 24,
-                left: 24,
-                background: "rgba(10,10,10,0.85)",
-                backdropFilter: "blur(8px)",
-                color: "#fff",
-                padding: "12px 20px",
-                borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
+            <div className="absolute bottom-6 left-6 bg-[rgba(10,10,10,0.85) backdrop-blur-md text-white py-3 px-5 rounded-xl border border-[rgba(255,255,255,0.1)">
               <p
-                style={{
-                  fontWeight: 700,
-                  fontSize: 16,
-                  fontFamily: "var(--qs-font)",
-                }}
+                className="font-bold text-[16px] font-sans"
+                style={{ fontFamily: "var(--qs-font)" }}
               >
                 {featuredItem.name}
               </p>
               <p
-                style={{
-                  fontSize: 12,
-                  color: "var(--qs-muted)",
-                  marginTop: 2,
-                  fontFamily: "var(--qs-font)",
-                }}
+                className="text-[12px] text-(--qs-muted) mt-0.5 font-sans"
+                style={{ fontFamily: "var(--qs-font)" }}
               >
                 {featuredItem.description?.substring(0, 60)}
                 {(featuredItem.description?.length ?? 0) > 60 ? "…" : ""}
@@ -912,95 +655,47 @@ function DisplayBody({ content, data }: DisplayBodyProps<TemplateOneContent>) {
       <div className="qs-divider" />
 
       {/* Search bar */}
-      <div
-        style={{
-          padding: "20px 32px",
-          display: "flex",
-          gap: 12,
-          alignItems: "center",
-          flexWrap: "wrap",
-          background: "var(--qs-surface)",
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-            minWidth: 200,
-            maxWidth: 340,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            background: "var(--qs-surface2)",
-            border: "1px solid var(--qs-border)",
-            borderRadius: 8,
-            padding: "8px 14px",
-          }}
-        >
+      <div className="flex flex-wrap items-center gap-3 px-8 py-5 bg-(--qs-surface)">
+        <div className="flex-1 min-w-[200px] max-w-[340px] flex items-center gap-2 bg-(--qs-surface2) border border-(--qs-border) rounded-lg px-[14px] py-2">
           <Search size={14} color="var(--qs-muted)" />
           <input
             type="text"
             placeholder="Search products..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              background: "none",
-              border: "none",
-              outline: "none",
-              color: "var(--qs-text)",
-              fontSize: 13,
-              fontFamily: "var(--qs-font)",
-              width: "100%",
-            }}
+            className="bg-transparent border-0 outline-none text-(--qs-text) text-[13px] font-sans w-full"
+            style={{ fontFamily: "var(--qs-font)" }}
           />
         </div>
         <span
-          style={{
-            fontSize: 12,
-            color: "var(--qs-muted)",
-            fontFamily: "var(--qs-font)",
-          }}
+          className="text-[12px] text-(--qs-muted) font-sans"
+          style={{ fontFamily: "var(--qs-font)" }}
         >
-          {filtered.length} of {content.items.length} products
+          {filtered.length} of {safeContent.items.length} products
         </span>
       </div>
 
       {/* Product grid */}
-      <section style={{ padding: "32px", maxWidth: 1200, margin: "0 auto" }}>
-        <p className="qs-section-label" style={{ marginBottom: 24 }}>
-          — All Products
-        </p>
-        <div
-          className="qs-product-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-            gap: 20,
-          }}
-        >
-          {filtered.map((item) => (
+      <section className="px-8 py-8 max-w-6xl mx-auto">
+        <p className="qs-section-label mb-6">— All Products</p>
+        <div className="qs-product-grid grid grid-cols-[repeat(auto-fill,minmax(260px,1fr)) gap-5">
+          {filtered.map((item: CatalogueItem) => (
             <DisplayProductCard
               key={item.id}
               item={item}
-              isFeatured={item.id === (featured ?? content.items[0]?.id)}
+              isFeatured={item.id === (featured ?? safeContent.items[0]?.id)}
               onFeature={() => setFeatured(item.id)}
-              waNumber={content.whatsappNumber}
+              waNumber={safeContent.whatsappNumber}
               onWaClick={handleWhatsappClick}
             />
           ))}
         </div>
         {filtered.length === 0 && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "64px 0",
-              color: "var(--qs-muted)",
-            }}
-          >
-            <ShoppingBag
-              size={40}
-              style={{ margin: "0 auto 16px", opacity: 0.3 }}
-            />
-            <p style={{ fontFamily: "var(--qs-font)" }}>No products found</p>
+          <div className="text-center py-16 text-(--qs-muted)">
+            <ShoppingBag size={40} className="mx-auto mb-4 opacity-30" />
+            <p className="font-sans" style={{ fontFamily: "var(--qs-font)" }}>
+              No products found
+            </p>
           </div>
         )}
       </section>
@@ -1010,14 +705,14 @@ function DisplayBody({ content, data }: DisplayBodyProps<TemplateOneContent>) {
 
       {/* Footer */}
       <CatalogueFooter
-        brandName={content.brandName}
-        waNumber={content.whatsappNumber}
+        brandName={safeContent.brandName}
+        waNumber={safeContent.whatsappNumber}
       />
 
       {/* Floating WA */}
       <WaFloatButton
-        number={content.whatsappNumber}
-        ctaLabel={content.ctaLabel}
+        number={safeContent.whatsappNumber}
+        ctaLabel={safeContent.ctaLabel}
       />
     </>
   );
@@ -1041,19 +736,10 @@ function EditorProductCard({
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <div className="qs-card" style={{ position: "relative" }}>
+    <div className="qs-card relative">
       <div className="qs-img-wrap">
         {uploading ? (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "var(--qs-surface2)",
-            }}
-          >
+          <div className="w-full h-full flex items-center justify-center bg-(--qs-surface2)">
             <Loader2
               size={28}
               color="var(--qs-accent)"
@@ -1063,45 +749,17 @@ function EditorProductCard({
         ) : item.image ? (
           <img src={item.image} alt={item.name} />
         ) : (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "var(--qs-surface2)",
-              color: "var(--qs-muted)",
-              gap: 8,
-            }}
-          >
-            <Tag size={28} style={{ opacity: 0.3 }} />
-            <span style={{ fontSize: 11 }}>No image</span>
+          <div className="w-full h-full flex flex-col items-center justify-center bg-(--qs-surface2) text-(--qs-muted) gap-2">
+            <Tag size={28} className="opacity-30" />
+            <span className="text-[11px]">No image</span>
           </div>
         )}
 
         {/* Upload button */}
         {!uploading && (
           <label
-            style={{
-              position: "absolute",
-              bottom: 10,
-              right: 10,
-              background: "rgba(0,0,0,0.7)",
-              backdropFilter: "blur(4px)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              color: "#fff",
-              borderRadius: 8,
-              padding: "6px 12px",
-              fontSize: 11,
-              fontWeight: 600,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              fontFamily: "var(--qs-font)",
-            }}
+            className="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-sm border border-white/15 text-white rounded-lg px-3 py-1.5 text-[11px] font-semibold cursor-pointer flex items-center gap-1.5 font-sans"
+            style={{ fontFamily: "var(--qs-font)" }}
           >
             <Upload size={11} /> Upload
             <input
@@ -1114,92 +772,39 @@ function EditorProductCard({
         )}
 
         {/* Index badge */}
-        <div
-          style={{
-            position: "absolute",
-            top: 10,
-            left: 10,
-            background: "rgba(0,0,0,0.6)",
-            color: "var(--qs-accent)",
-            borderRadius: 6,
-            padding: "3px 8px",
-            fontSize: 11,
-            fontWeight: 700,
-          }}
-        >
+        <div className="absolute top-2.5 left-2.5 bg-black/60 text-(--qs-accent) rounded-md px-2 py-0.5 text-[11px] font-bold">
           #{index + 1}
         </div>
       </div>
 
       {/* Info */}
-      <div style={{ padding: 16 }}>
+      <div className="p-4">
         <input
           defaultValue={item.name}
           onBlur={(e) => onChange("name", e.currentTarget.value)}
           placeholder="Product name"
-          style={{
-            width: "100%",
-            background: "var(--qs-surface2)",
-            border: "1px solid var(--qs-border)",
-            borderRadius: 6,
-            padding: "7px 10px",
-            color: "var(--qs-text)",
-            fontSize: 15,
-            fontWeight: 700,
-            fontFamily: "var(--qs-font)",
-            outline: "none",
-            marginBottom: 8,
-          }}
+          className="w-full bg-(--qs-surface2) border border-(--qs-border) rounded-md px-2.5 py-1.5 text-(--qs-text) text-[15px] font-bold font-sans outline-none mb-2"
+          style={{ fontFamily: "var(--qs-font)" }}
         />
         <input
           defaultValue={item.price}
           onBlur={(e) => onChange("price", e.currentTarget.value)}
           placeholder="₦0"
-          style={{
-            width: "100%",
-            background: "transparent",
-            border: "none",
-            color: "var(--qs-accent)",
-            fontSize: 18,
-            fontWeight: 800,
-            fontFamily: "var(--qs-font)",
-            outline: "none",
-            marginBottom: 8,
-          }}
+          className="w-full bg-transparent border-0 text-(--qs-accent) text-[18px] font-extrabold font-sans outline-none mb-2"
+          style={{ fontFamily: "var(--qs-font)" }}
         />
         <textarea
           defaultValue={item.description}
           onBlur={(e) => onChange("description", e.currentTarget.value)}
           placeholder="Product description..."
           rows={2}
-          style={{
-            width: "100%",
-            background: "var(--qs-surface2)",
-            border: "1px solid var(--qs-border)",
-            borderRadius: 6,
-            padding: "7px 10px",
-            color: "var(--qs-muted)",
-            fontSize: 12,
-            fontFamily: "var(--qs-font)",
-            outline: "none",
-            resize: "none",
-            lineHeight: 1.5,
-          }}
+          className="w-full bg-(--qs-surface2) border border-(--qs-border) rounded-md px-2.5 py-1.5 text-(--qs-muted) text-[12px] font-sans outline-none resize-none leading-relaxed"
+          style={{ fontFamily: "var(--qs-font)" }}
         />
         <button
           onClick={onDelete}
-          style={{
-            marginTop: 10,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            color: "#ff4444",
-            background: "none",
-            border: "none",
-            fontSize: 11,
-            cursor: "pointer",
-            fontFamily: "var(--qs-font)",
-          }}
+          className="mt-2.5 inline-flex items-center gap-1 text-[#ff4444] bg-none border-0 text-[11px] cursor-pointer font-sans"
+          style={{ fontFamily: "var(--qs-font)" }}
         >
           <Trash2 size={11} /> Remove
         </button>
@@ -1230,68 +835,24 @@ function DisplayProductCard({
     : "#";
 
   return (
-    <div className="qs-card" style={{ cursor: "pointer" }} onClick={onFeature}>
-      <div className="qs-img-wrap">
+    <div className="qs-card cursor-pointer" onClick={onFeature}>
+      <div className="qs-img-wrap relative">
         {item.image ? (
           <img src={item.image} alt={item.name} />
         ) : (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "var(--qs-surface2)",
-            }}
-          >
-            <Tag size={32} style={{ opacity: 0.2 }} />
+          <div className="w-full h-full flex items-center justify-center bg-(--qs-surface2)">
+            <Tag size={32} className="opacity-20" />
           </div>
         )}
 
         {isFeatured && (
-          <div
-            style={{
-              position: "absolute",
-              top: 10,
-              left: 10,
-              background: "var(--qs-accent)",
-              color: "var(--qs-accent-fg, #000)",
-              borderRadius: 6,
-              padding: "3px 10px",
-              fontSize: 10,
-              fontWeight: 800,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-            }}
-          >
+          <div className="absolute top-2.5 left-2.5 bg-(--qs-accent) text-(--qs-accent-fg,#000) rounded-md px-2.5 py-0.5 text-[10px] font-extrabold tracking-wide uppercase">
             ✦ Featured
           </div>
         )}
 
         {/* Hover overlay */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(10,10,10,0)",
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "center",
-            padding: "16px",
-            transition: "background 0.25s",
-            opacity: 0,
-          }}
-          onMouseEnter={(e) => {
-            const el = e.currentTarget as HTMLElement;
-            el.style.opacity = "1";
-            el.style.background = "rgba(10,10,10,0.5)";
-          }}
-          onMouseLeave={(e) => {
-            const el = e.currentTarget as HTMLElement;
-            el.style.opacity = "0";
-          }}
-        >
+        <div className="absolute inset-0 flex items-end justify-center p-4 transition-all duration-200 bg-[rgba(10,10,10,0) opacity-0 hover:opacity-100 hover:bg-[rgba(10,10,10,0.5)">
           <a
             href={waHref}
             target="_blank"
@@ -1300,70 +861,37 @@ function DisplayProductCard({
               e.stopPropagation();
               onWaClick();
             }}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              background: "var(--qs-wa)",
-              color: "#fff",
-              borderRadius: 999,
-              padding: "8px 20px",
-              fontWeight: 700,
-              fontSize: 13,
-              textDecoration: "none",
-              fontFamily: "var(--qs-font)",
-            }}
+            className="inline-flex items-center gap-1.5 bg-(--qs-wa) text-white rounded-full px-5 py-2 font-bold text-[13px] font-sans hover:bg-green-500"
+            style={{ fontFamily: "var(--qs-font)" }}
           >
             <MessageCircle size={13} /> Order Now
           </a>
         </div>
       </div>
 
-      <div style={{ padding: 16 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 8,
-            marginBottom: 6,
-          }}
-        >
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-2 mb-1.5">
           <p
-            style={{
-              fontWeight: 700,
-              fontSize: 15,
-              fontFamily: "var(--qs-font)",
-              lineHeight: 1.3,
-            }}
+            className="font-bold text-[15px] font-sans leading-snug"
+            style={{ fontFamily: "var(--qs-font)" }}
           >
             {item.name}
           </p>
           <Star
             size={14}
             color="var(--qs-accent)"
-            style={{ flexShrink: 0, marginTop: 2 }}
+            className="shrink-0 mt-0.5"
           />
         </div>
         <p
-          style={{
-            fontSize: 20,
-            fontWeight: 800,
-            color: "var(--qs-accent)",
-            fontFamily: "var(--qs-font)",
-            marginBottom: 8,
-          }}
+          className="text-[20px] font-extrabold text-(--qs-accent) font-sans mb-2"
+          style={{ fontFamily: "var(--qs-font)" }}
         >
           {item.price}
         </p>
         <p
-          style={{
-            fontSize: 12,
-            color: "var(--qs-muted)",
-            lineHeight: 1.5,
-            fontFamily: "var(--qs-font)",
-            marginBottom: 14,
-          }}
+          className="text-[12px] text-(--qs-muted) leading-snug font-sans mb-3.5"
+          style={{ fontFamily: "var(--qs-font)" }}
         >
           {item.description}
         </p>
@@ -1375,22 +903,8 @@ function DisplayProductCard({
             e.stopPropagation();
             onWaClick();
           }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-            background: "rgba(37,211,102,0.1)",
-            color: "var(--qs-wa)",
-            border: "1px solid rgba(37,211,102,0.25)",
-            borderRadius: 8,
-            padding: "9px",
-            fontWeight: 600,
-            fontSize: 13,
-            textDecoration: "none",
-            fontFamily: "var(--qs-font)",
-            transition: "all 0.15s",
-          }}
+          className="flex items-center justify-center gap-1.5 bg-[rgba(37,211,102,0.1) text-(--qs-wa) border border-[rgba(37,211,102,0.25) rounded-lg px-2.5 py-2 font-semibold text-[13px] font-sans hover:bg-[rgba(37,211,102,0.2) transition-all"
+          style={{ fontFamily: "var(--qs-font)" }}
         >
           <MessageCircle size={14} /> Order via WhatsApp
           <ChevronRight size={13} />
@@ -1402,15 +916,11 @@ function DisplayProductCard({
 
 // ─── 7. Wire it all up ─────────────────────────────────────────────────────
 
-const { TemplateEditor, TemplateDisplay } = createTemplate<TemplateOneContent>(
-  {
-    templateId: "template-1",
-    normalizeContent,
-    EditorBody,
-    DisplayBody,
-  },
-  darkGoldTheme, // ← swap this import to change the whole look
-);
+const TemplateEditor = (props: EditorBodyProps<TemplateOneContent>) =>
+  <div className="w-full h-full"><EditorBody {...props} /></div>;
+
+const TemplateDisplay = (props: DisplayBodyProps<TemplateOneContent>) =>
+  <div className="w-full h-full"><DisplayBody {...props} /></div>;
 
 export default TemplateEditor;
 export { TemplateDisplay as Template_1_Display };
