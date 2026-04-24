@@ -89,9 +89,7 @@ export default function CreateSitePage() {
   return (
     <div className="max-w-4xl mx-auto py-12 px-6">
       <div className="mb-10 text-center">
-        <h1 className="text-4xl font-black tracking-tight">
-          Launch Your Site
-        </h1>
+        <h1 className="text-4xl font-black tracking-tight">Launch Your Site</h1>
         <p className="text-slate-500 mt-2 text-lg">
           Start with a production-ready online catalogue template.
         </p>
@@ -119,7 +117,7 @@ export default function CreateSitePage() {
               <span className="text-sm font-bold ml-1">Desired URL</span>
               <div className="flex mt-1">
                 <span className="inline-flex items-center px-4 rounded-l-xl border border-r-0 bg-slate-50 text-slate-400 text-sm">
-                  makesite.com/
+                  makesite.com/s/
                 </span>
                 <input
                   required
