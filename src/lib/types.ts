@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/lib/types.ts
 import { Timestamp } from "firebase/firestore";
 
@@ -13,20 +14,18 @@ export interface UserProfile {
   updatedAt: Timestamp | null;
 }
 
-export type SiteStatus = "published" | "draft";
-
 export interface Site {
   id: string;
   uid: string;
-  name: string;
-  slug: string; // makesite.com.ng/<slug>
+  slug: string;
   type: string;
-  templateId: string;
-  status: SiteStatus;
-  visits: number;
-  whatsappClicks: number;
-  createdAt: Timestamp | null;
-  updatedAt: Timestamp | null;
+  name: string;
+  theme: string;
+  status: string;
+  visits?: number;
+  whatsappClicks?: number;
+  createdAt?: Timestamp | null;
+  updatedAt?: Timestamp | null;
   content: Record<string, unknown>;
 }
 

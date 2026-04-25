@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { isValidTemplate } from "@/lib/templates";
-import { getTemplateMeta } from "@/lib/templateCatalog";
+import { isValidTemplate, templatesRegistry } from "@/lib/templates";
 
 interface TemplatePreviewPageProps {
   params: Promise<{ type: string }>;
@@ -16,7 +15,7 @@ export default async function TemplatePreviewPage({
     notFound();
   }
 
-  const templateMeta = getTemplateMeta(type);
+  const templateMeta = templatesRegistry[type].meta;
 
   if (!templateMeta) {
     notFound();
@@ -27,7 +26,8 @@ export default async function TemplatePreviewPage({
       <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Template Preview: <span className="font-semibold text-foreground">{type}</span>
+            Template Preview:{" "}
+            <span className="font-semibold text-foreground">{type}</span>
           </p>
           <div className="flex items-center gap-2">
             <Link

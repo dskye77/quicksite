@@ -56,7 +56,6 @@ export default function SiteEditorPage({ params }: PageProps) {
         name: siteData.name,
         slug: siteData.slug,
         type: siteData.type,
-        templateId: siteData.templateId,
         status: siteData.status,
         content: siteData.content,
       });

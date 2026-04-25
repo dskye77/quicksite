@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React from "react";
 import type { Site } from "@/lib/types";
+import { setDeep } from "@/lib/helpers";
 
-// Import the template registry
-import { templatesRegistry } from "@/assets/siteTemplates/templatesRegistry";
+import { templatesRegistry } from "@/lib/templates";
+import { themeRegistry } from "@/lib/themes";
 
 interface EditorScreenProps {
   data: Site;
@@ -12,8 +13,9 @@ interface EditorScreenProps {
 
 export default function EditorScreen({ data, onChange }: EditorScreenProps) {
   const templateEntry = templatesRegistry[data.type];
+  const theme = themeRegistry["tech"];
 
-  if (!templateEntry || !templateEntry.editor) {
+  if (!templateEntry) {
     return (
       <div className="p-12 text-center bg-white rounded-xl border">
         <p className="text-red-500 font-bold">
@@ -23,16 +25,20 @@ export default function EditorScreen({ data, onChange }: EditorScreenProps) {
     );
   }
 
-  const TemplateEditor = templateEntry.editor;
-
-  // Forwards changes upward to parent via `onChange`
-  const handleUpdate = (updates: Partial<Site>) => {
-    onChange({ ...data, ...updates });
+  const handleUpdate = (path: string, value: any) => {
+    const updated = setDeep(data.content, path, value);
+    onChange({ ...data, content: updated });
   };
+  const Template = templateEntry.template;
 
   return (
-    <div className="w-full h-full">
-      <TemplateEditor data={data} onUpdate={handleUpdate} />
+    <div className={`w-full h-full ${theme.className}`}>
+      <style>{theme.css}</style>
+      <Template
+        isEditor={true}
+        content={data.content}
+        onUpdate={handleUpdate}
+      />
     </div>
   );
 }

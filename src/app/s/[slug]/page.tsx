@@ -1,40 +1,70 @@
-// app/s/[slug]/page.tsx
+"use client";
 
-import { getSiteBySlug, trackSiteEvent } from "@/lib/firestore";
-import { Template_1_Display } from "@/assets/siteTemplates/Template_1";
-import { notFound } from "next/navigation";
+import { useEffect, useState, use } from "react";
+import { getSiteBySlug } from "@/lib/firestore";
 
-export default async function PublicSite({
-  params,
-}: {
-  params: Promise<{ slug: string }>; // Change to Promise
-}) {
-  // CRITICAL: Await the params in Next.js 15+
-  const { slug } = await params;
+import SiteRenderer from "@/features/s/SiteRenderer";
+import { Loader2 } from "lucide-react";
+import type { Site } from "@/lib/types";
 
-  // Defensive check: if slug is somehow missing, 404 immediately
-  // and prevent the Firestore 'undefined' error
-  if (!slug) notFound();
+interface PageProps {
+  params: Promise<{
+    slug: string;
+  }>;
+}
 
-  const siteData = await getSiteBySlug(slug);
+export default function PublicSitePage({ params }: PageProps) {
+  const { slug } = use(params);
 
-  if (!siteData) notFound();
+  const [site, setSite] = useState<Site | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  try {
-    await trackSiteEvent(siteData, "visit");
-  } catch (error) {
-    console.error("Failed to track visit:", error);
-  }
+  useEffect(() => {
+    async function load() {
+      try {
+        setLoading(true);
+        const data = await getSiteBySlug(slug);
+        if (data && data.status === "published") {
+          setSite(data);
+        } else {
+          setSite(null);
+        }
+      } catch (err) {
+        console.error("Public site load error:", err);
+        setSite(null);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  const templateType = siteData.type || siteData.templateId;
-  if (templateType !== "template-1") {
+    if (slug) load();
+  }, [slug]);
+
+  // ── Loading ─────────────────────────────
+  if (loading) {
     return (
-      <div className="p-10 text-center">
-        <h1 className="text-xl font-bold text-red-600">Configuration Error</h1>
-        <p>Template type &quot;{templateType}&quot; is not registered.</p>
+      <div className="h-screen flex items-center justify-center bg-white">
+        <Loader2 className="animate-spin text-slate-500" />
       </div>
     );
   }
 
-  return <Template_1_Display data={siteData} />;
+  // ── Not Found / Unpublished ─────────────
+  if (!site) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center text-center px-6">
+        <h1 className="text-2xl font-bold">Site not available</h1>
+        <p className="text-slate-500 mt-2">
+          This site may be unpublished or doesn’t exist.
+        </p>
+      </div>
+    );
+  }
+
+  // ── Renderer ────────────────────────────
+  return (
+    <main className="min-h-screen bg-white text-slate-900">
+      <SiteRenderer site={site} />
+    </main>
+  );
 }

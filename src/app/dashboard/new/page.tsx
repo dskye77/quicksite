@@ -4,11 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSite, isSlugTaken } from "@/lib/firestore";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  PRODUCTION_TEMPLATE_ID,
-  createTemplateOneStarterContent,
-  getTemplateMeta,
-} from "@/lib/templateCatalog";
+import { templatesRegistry, templatesMetaRegistryArray } from "@/lib/templates";
 import { Layout, ArrowRight, CheckCircle2, Loader2, Eye } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,18 +12,16 @@ export default function CreateSitePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const templateFromQuery = searchParams.get("template");
-  const selectedTemplate =
-    templateFromQuery === PRODUCTION_TEMPLATE_ID
-      ? templateFromQuery
-      : PRODUCTION_TEMPLATE_ID;
-  const selectedTemplateMeta = getTemplateMeta(selectedTemplate);
+  const templateTypeFromQuery = searchParams.get("template");
+  const selectedTemplateType = templateTypeFromQuery || "template-1";
+
+  const templateEntry = templatesRegistry[selectedTemplateType];
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
-    type: selectedTemplate,
+    type: selectedTemplateType,
   });
 
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,6 +30,12 @@ export default function CreateSitePage() {
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
     setFormData({ ...formData, slug: val });
+  };
+  const handleTemplateChange = (newTemplateType: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("template", newTemplateType);
+    router.replace(`?${params.toString()}`);
+    setFormData({ ...formData, type: newTemplateType });
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -60,15 +60,20 @@ export default function CreateSitePage() {
       }
 
       // 2. Create starter content that will be saved to Firebase
-      const content = createTemplateOneStarterContent(normalizedName);
+      const content = templateEntry.starterContent(normalizedName);
 
       // 3. Construct the final object
+
       const sitePayload = {
-        name: normalizedName,
         slug: normalizedSlug,
         type: formData.type,
-        templateId: formData.type,
-        status: "draft" as const,
+        name: normalizedName,
+        theme: "",
+        status: "draft",
+        visits: 0,
+        whatsappClicks: 0,
+        createdAt: null,
+        updatedAt: null,
         content,
       };
 
@@ -152,26 +157,53 @@ export default function CreateSitePage() {
         <div className="space-y-4">
           <p className="text-sm font-bold ml-1">Template</p>
           <div className="grid gap-4">
-            <div className="relative p-4 rounded-2xl border-2 border-primary bg-primary/5">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white rounded-lg border shadow-sm">
-                  <Layout size={18} className="text-primary" />
+            {templatesMetaRegistryArray.map((meta) => {
+              const selected = formData.type === meta.type;
+              return (
+                <div
+                  className={
+                    [
+                      "relative p-4 rounded-2xl border-2 transition-all cursor-pointer",
+                      selected
+                        ? "border-primary bg-primary/5"
+                        : "border-slate-200 bg-white hover:border-primary"
+                    ].join(" ")
+                  }
+                  key={meta.type}
+                  onClick={() => handleTemplateChange(meta.type)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={[
+                        "p-2 rounded-lg border shadow-sm transition-all",
+                        selected ? "bg-white border-primary" : "bg-slate-50 border-slate-200"
+                      ].join(" ")}
+                    >
+                      <Layout size={18} className={selected ? "text-primary" : "text-slate-400"} />
+                    </div>
+                    <div>
+                      <h3
+                        className={[
+                          "font-bold text-sm transition-colors",
+                          selected ? "text-primary" : "text-foreground"
+                        ].join(" ")}
+                      >
+                        {meta?.title ?? "Production Template"}
+                      </h3>
+                      <p className={["text-[10px] transition-colors", selected ? "text-primary/80" : "text-slate-500"].join(" ")}>
+                        {meta?.description ?? "Ready-to-ship layout for catalogue sites."}
+                      </p>
+                    </div>
+                  </div>
+                  {selected && (
+                    <CheckCircle2
+                      className="absolute top-2 right-2 text-primary drop-shadow"
+                      size={16}
+                    />
+                  )}
                 </div>
-                <div>
-                  <h3 className="font-bold text-sm">
-                    {selectedTemplateMeta?.title ?? "Production Template"}
-                  </h3>
-                  <p className="text-[10px] text-slate-500">
-                    {selectedTemplateMeta?.description ??
-                      "Ready-to-ship layout for catalogue sites."}
-                  </p>
-                </div>
-              </div>
-              <CheckCircle2
-                className="absolute top-2 right-2 text-primary"
-                size={16}
-              />
-            </div>
+              );
+            })}
 
             <Link
               href={`/templates/${formData.type}`}
@@ -182,6 +214,7 @@ export default function CreateSitePage() {
             </Link>
           </div>
         </div>
+  
       </form>
     </div>
   );
