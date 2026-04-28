@@ -297,7 +297,7 @@ export default function CreateSitePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-2 sm:py-12 sm:px-6">
+    <div className="max-w-4xl mx-auto py-8 px-1 sm:py-12 sm:px-6">
       <div className="mb-8 text-center">
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
           Launch Your Site
@@ -321,7 +321,7 @@ export default function CreateSitePage() {
         </div>
 
         {/* Inputs — bottom on mobile, left on desktop */}
-        <div className="order-2 md:order-1 md:col-span-2 space-y-6 bg-card p-6 sm:p-8 rounded-3xl border shadow-sm">
+        <div className="order-2 md:order-1 md:col-span-2 space-y-6 bg-card p-4 sm:p-8 rounded-3xl border shadow-sm">
           <SiteFormInputs
             formData={formData}
             setFormData={setFormData}
