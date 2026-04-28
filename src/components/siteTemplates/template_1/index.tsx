@@ -603,6 +603,16 @@ const template1StarterContent = ({
   whatsappNumber?: string;
   defaultMessage?: string;
 }) => {
+  // Helper for whatsapp links: returns {} if no phone, else valid object with no undefined/null fields
+  const getWhatsappButtonLink = () => {
+    if (!whatsappNumber) return {};
+    return {
+      type: "whatsapp",
+      phone: whatsappNumber,
+      message: typeof defaultMessage === "string" ? defaultMessage : "",
+    };
+  };
+
   return {
     navbar: {
       logo: "🚀",
@@ -618,17 +628,9 @@ const template1StarterContent = ({
       title: "Transform Your Business With Our Solution",
       desc: "We help businesses grow faster with innovative solutions designed to simplify your workflow and maximize results.",
       primaryButton: "Get Started",
-      primaryButtonLink: {
-        type: "whatsapp",
-        phone: whatsappNumber,
-        message: defaultMessage,
-      },
+      primaryButtonLink: getWhatsappButtonLink(),
       secondaryButton: "Learn More",
-      secondaryButtonLink: {
-        type: "whatsapp",
-        phone: whatsappNumber,
-        message: defaultMessage,
-      },
+      secondaryButtonLink: getWhatsappButtonLink(),
     },
 
     trustedByLabel: "Trusted by",
@@ -685,11 +687,7 @@ const template1StarterContent = ({
       title: "Ready to Get Started?",
       desc: "Join thousands of satisfied customers and start your journey with us today.",
       button: "Get Started Now",
-      buttonLink: {
-        type: "whatsapp",
-        phone: whatsappNumber,
-        message: defaultMessage,
-      },
+      buttonLink: getWhatsappButtonLink(),
     },
 
     footer: {
