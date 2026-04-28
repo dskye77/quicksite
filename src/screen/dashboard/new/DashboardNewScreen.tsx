@@ -54,14 +54,14 @@ function SiteFormInputs({
         <label className="block">
           <span className="text-sm font-bold ml-1">Desired URL</span>
           <div className="flex mt-1">
-            <span className="inline-flex items-center px-4 rounded-l-xl border border-r-0 bg-slate-50 text-slate-400 text-sm">
+            <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 bg-slate-50 text-slate-400 text-xs shrink-0">
               {SITE_DOMAIN_NAME}
               {DOMAIN_NAME}/s/
             </span>
             <input
               required
               type="text"
-              className="flex-1 px-4 py-3 rounded-r-xl border border-slate-200 focus:ring-2 focus:ring-primary outline-none transition-all"
+              className="flex-1 min-w-0 px-3 py-3 rounded-r-xl border border-slate-200 focus:ring-2 focus:ring-primary outline-none transition-all text-sm"
               placeholder="my-site"
               value={formData.slug}
               onChange={onSlugChange}
@@ -105,19 +105,21 @@ function TemplatePicker({
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold ml-1">Template</span>
         <Link href={`/templates?name=${nameForPreview}&slug=${slugForPreview}`}>
-          <button className="text-primary text-sm font-semibold rounded-full px-3 py-1 transition-all border border-primary cursor-pointer hover:scale-102">
+          <button className="text-primary text-sm font-semibold rounded-full px-3 py-1 transition-all border border-primary cursor-pointer">
             View all
           </button>
         </Link>
       </div>
-      <div className="grid gap-4">
-        {templatesRegistry.map((t) => {
+      <div className="grid gap-3">
+        {templatesRegistry.slice(0, 3).map((t) => {
           const selected = selectedType === t.type;
           return (
             <div
               className={[
-                "relative p-4 rounded-2xl border-2 transition-all cursor-pointer",
-                selected ? "border-primary bg-primary/5" : "",
+                "relative p-3 rounded-2xl border-2 transition-all cursor-pointer",
+                selected
+                  ? "border-primary bg-primary/5"
+                  : "border-transparent bg-muted/40",
               ].join(" ")}
               key={t.type}
               onClick={() => onTemplateChange(t.type)}
@@ -125,21 +127,21 @@ function TemplatePicker({
               <div className="flex items-center gap-3">
                 <div
                   className={[
-                    "p-2 rounded-lg border shadow-sm transition-all",
+                    "p-2 rounded-lg border shadow-sm transition-all shrink-0",
                     selected
                       ? "bg-white border-primary"
                       : "bg-slate-50 border-slate-200",
                   ].join(" ")}
                 >
                   <Layout
-                    size={18}
+                    size={16}
                     className={selected ? "text-primary" : "text-slate-400"}
                   />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3
                     className={[
-                      "font-bold text-sm transition-colors",
+                      "font-bold text-sm truncate transition-colors",
                       selected ? "text-primary" : "text-foreground",
                     ].join(" ")}
                   >
@@ -147,7 +149,7 @@ function TemplatePicker({
                   </h3>
                   <p
                     className={[
-                      "text-[10px] transition-colors",
+                      "text-[10px] line-clamp-3 transition-colors",
                       selected ? "text-primary/80" : "text-slate-500",
                     ].join(" ")}
                   >
@@ -295,16 +297,31 @@ export default function CreateSitePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
-      <div className="mb-10 text-center">
-        <h1 className="text-4xl font-black tracking-tight">Launch Your Site</h1>
-        <p className="text-slate-500 mt-2 text-lg">
+    <div className="max-w-4xl mx-auto py-8 px-2 sm:py-12 sm:px-6">
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
+          Launch Your Site
+        </h1>
+        <p className="text-slate-500 mt-2 text-base sm:text-lg">
           Start with a production-ready online catalogue template.
         </p>
       </div>
-      <form onSubmit={handleCreate} className="grid md:grid-cols-3 gap-8">
-        {/* Left: Inputs */}
-        <div className="md:col-span-2 space-y-6 bg-card p-8 rounded-3xl border shadow-sm">
+      <form
+        onSubmit={handleCreate}
+        className="flex flex-col gap-6 md:grid md:grid-cols-3 md:gap-8"
+      >
+        {/* Template Picker — top on mobile, right on desktop */}
+        <div className="order-1 md:order-2">
+          <TemplatePicker
+            selectedType={formData.type}
+            onTemplateChange={handleTemplateChange}
+            slugForPreview={formData.slug}
+            nameForPreview={formData.name}
+          />
+        </div>
+
+        {/* Inputs — bottom on mobile, left on desktop */}
+        <div className="order-2 md:order-1 md:col-span-2 space-y-6 bg-card p-6 sm:p-8 rounded-3xl border shadow-sm">
           <SiteFormInputs
             formData={formData}
             setFormData={setFormData}
@@ -312,13 +329,6 @@ export default function CreateSitePage() {
             onSlugChange={handleSlugChange}
           />
         </div>
-        {/* Right: Template Picker */}
-        <TemplatePicker
-          selectedType={formData.type}
-          onTemplateChange={handleTemplateChange}
-          slugForPreview={formData.slug}
-          nameForPreview={formData.name}
-        />
       </form>
     </div>
   );
