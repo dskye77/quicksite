@@ -1,14 +1,58 @@
 // src/features/templates/TemplateGallery.tsx
 "use client";
 
+import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { TemplateCard } from "./TemplateCard";
-import { templatesMetaRegistryArray } from "@/lib/templates";
+import { templatesRegistry, templatesCategories } from "@/lib/templates";
 
 export default function TemplateGallery() {
   const searchParams = useSearchParams();
   const paramsName = searchParams.get("name");
   const paramsSlug = searchParams.get("slug");
+
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  const buildQuery = (base: string) => {
+    const queryParams: string[] = [];
+    if (paramsName) queryParams.push(`name=${encodeURIComponent(paramsName)}`);
+    if (paramsSlug) queryParams.push(`slug=${encodeURIComponent(paramsSlug)}`);
+    return queryParams.length > 0 ? `${base}?${queryParams.join("&")}` : base;
+  };
+
+  const categories = ["all", ...templatesCategories];
+
+  // Filter templates
+  const filtered = useMemo(() => {
+    return templatesRegistry.filter((t) => {
+      const matchesSearch =
+        search.trim() === "" ||
+        t.meta.title.toLowerCase().includes(search.toLowerCase()) ||
+        t.meta.description?.toLowerCase().includes(search.toLowerCase()) ||
+        t.meta.category.toLowerCase().includes(search.toLowerCase());
+
+      const matchesCategory =
+        selectedCategory === "all" || t.meta.category === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [search, selectedCategory]);
+
+  // Group filtered templates by category
+  const grouped = useMemo(() => {
+    return filtered.reduce(
+      (acc, template) => {
+        const cat = template.meta.category;
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(template);
+        return acc;
+      },
+      {} as Record<string, typeof templatesRegistry>,
+    );
+  }, [filtered]);
+
+  const groupEntries = Object.entries(grouped);
 
   return (
     <section className="pt-16 pb-20">
@@ -27,21 +71,74 @@ export default function TemplateGallery() {
           </p>
         </div>
 
-        {/* Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {templatesMetaRegistryArray.map((template, i) => (
-            <TemplateCard
-              key={template.type}
-              type={template.type}
-              title={template.title}
-              description={template.description}
-              category={template.category}
-              previewHref={`/templates/${template.type}?name=${paramsName}&slug=${paramsSlug}`}
-              useHref={`/dashboard/new?template=${template.type}&name=${paramsName}&slug=${paramsSlug}`}
-              delay={i * 40}
-            />
-          ))}
+        {/* Search + Filter */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-10">
+          <input
+            type="text"
+            placeholder="Search templates..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 h-10 rounded-lg border border-border bg-background px-4 text-sm outline-none focus:ring-2 focus:ring-ring transition"
+          />
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="h-10 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring transition capitalize"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat} className="capitalize">
+                {cat === "all" ? "All Categories" : cat}
+              </option>
+            ))}
+          </select>
         </div>
+
+        {/* Results */}
+        {groupEntries.length === 0 ? (
+          <div className="text-center py-20 text-muted-foreground">
+            No templates found for{" "}
+            <span className="font-medium text-foreground">
+              &quot;{search}&quot;
+            </span>
+            .
+          </div>
+        ) : (
+          <div className="space-y-14">
+            {groupEntries.map(([category, templates]) => (
+              <div key={category}>
+                {/* Category heading — only show when not filtered to one category */}
+                {selectedCategory === "all" && (
+                  <div className="flex items-center gap-3 mb-6">
+                    <h2 className="text-lg font-semibold capitalize">
+                      {category}
+                    </h2>
+                    <span className="text-xs text-muted-foreground border border-border rounded-full px-2 py-0.5">
+                      {templates.length}
+                    </span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                )}
+
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {templates.map((template, i) => (
+                    <TemplateCard
+                      key={template.type}
+                      type={template.type}
+                      title={template.meta.title}
+                      description={template.meta.description}
+                      category={template.meta.category}
+                      previewHref={buildQuery(`/templates/${template.type}`)}
+                      useHref={buildQuery(
+                        `/dashboard/new?template=${encodeURIComponent(template.type)}`,
+                      )}
+                      delay={i * 40}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

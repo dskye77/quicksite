@@ -1,11 +1,11 @@
-import { templatesRegistry } from "@/lib/templates";
+import { getTemplateByType } from "@/lib/templates";
 import { getTheme } from "@/lib/themes";
 
 import type { Site } from "@/lib/types";
 
 export default function SiteRenderer({ site }: { site: Site }) {
   // Validate template exists
-  const templateEntry = templatesRegistry[site.type];
+  const templateEntry = getTemplateByType(site.type);
   if (!templateEntry?.template) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-50">

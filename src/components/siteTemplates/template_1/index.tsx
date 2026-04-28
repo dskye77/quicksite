@@ -1,22 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import type {
-  TemplateProps,
-  TemplateComponentProps,
-  TemplateConfig,
-} from "@/lib/templates";
+import type { TemplateProps, TemplateComponentProps } from "@/lib/templates";
 
 import TemplateImage from "@/components/shared/TemplateImage";
 import CtaLink from "@/components/shared/CtaLinkModal";
 
-export default function LandingPage({
+export default function Template1({
   isEditor,
   content,
   onUpdate,
 }: TemplateProps) {
   const handleUpdate = (path: string, value: any) => {
-    onUpdate(path, value);
+    if (onUpdate) onUpdate(path, value);
   };
 
   return (
@@ -598,19 +594,19 @@ function Footer({ isEditor, content, onUpdate }: TemplateComponentProps) {
   );
 }
 
-export const template1StarterContent = ({
+const template1StarterContent = ({
   selectedTitle,
   whatsappNumber,
   defaultMessage,
 }: {
-  selectedTitle: string;
-  whatsappNumber: number;
-  defaultMessage: string;
+  selectedTitle?: string;
+  whatsappNumber?: string;
+  defaultMessage?: string;
 }) => {
   return {
     navbar: {
       logo: "🚀",
-      title: selectedTitle,
+      title: selectedTitle || "My Business",
       links: ["Features", "About", "Pricing", "Contact"],
     },
 
@@ -703,15 +699,20 @@ export const template1StarterContent = ({
   };
 };
 
-export const template1Meta = {
+const template1Meta = {
   title: "Business Landing Page",
   category: "Landing Page",
   description:
     "A versatile landing page template perfect for businesses, products, services, or personal brands. Clean, professional, and fully customizable.",
 };
-
-export const template1Config: TemplateConfig = {
+const template1Config = {
   theme: "light",
-  
+  category: "landing-page"
 };
-export 
+export const template1 = {
+  type: "template-1",
+  meta: template1Meta,
+  config: template1Config,
+  template: Template1,
+  starterContent: template1StarterContent,
+};

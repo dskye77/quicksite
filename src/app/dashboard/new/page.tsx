@@ -11,7 +11,11 @@ import {
 } from "@/lib/firestore";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboardStore } from "@/store/useDashboardStore";
-import { templatesRegistry, templatesMetaRegistryArray } from "@/lib/templates";
+import {
+  getTemplateByType,
+  isValidTemplate,
+  templatesRegistry,
+} from "@/lib/templates";
 import { Layout, ArrowRight, CheckCircle2, Loader2, Eye } from "lucide-react";
 import { toast } from "sonner";
 
@@ -107,16 +111,16 @@ function TemplatePicker({
         </Link>
       </div>
       <div className="grid gap-4">
-        {templatesMetaRegistryArray.map((meta) => {
-          const selected = selectedType === meta.type;
+        {templatesRegistry.map((t) => {
+          const selected = selectedType === t.type;
           return (
             <div
               className={[
                 "relative p-4 rounded-2xl border-2 transition-all cursor-pointer",
                 selected ? "border-primary bg-primary/5" : "",
               ].join(" ")}
-              key={meta.type}
-              onClick={() => onTemplateChange(meta.type)}
+              key={t.type}
+              onClick={() => onTemplateChange(t.type)}
             >
               <div className="flex items-center gap-3">
                 <div
@@ -139,7 +143,7 @@ function TemplatePicker({
                       selected ? "text-primary" : "text-foreground",
                     ].join(" ")}
                   >
-                    {meta?.title ?? "Production Template"}
+                    {t.meta?.title ?? "Production Template"}
                   </h3>
                   <p
                     className={[
@@ -147,7 +151,7 @@ function TemplatePicker({
                       selected ? "text-primary/80" : "text-slate-500",
                     ].join(" ")}
                   >
-                    {meta?.description ??
+                    {t.meta?.description ??
                       "Ready-to-ship layout for catalogue sites."}
                   </p>
                 </div>
@@ -178,8 +182,11 @@ export default function CreateSitePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const templateTypeFromQuery = searchParams.get("template");
-  const selectedTemplateType = templateTypeFromQuery || "template-1";
+  const templateTypeFromQuery = searchParams.get("template") || "";
+
+  const selectedTemplateType = isValidTemplate(templateTypeFromQuery)
+    ? templateTypeFromQuery
+    : "template-1";
 
   const paramsName = searchParams.get("name");
   const paramsSlug = searchParams.get("slug");
@@ -189,7 +196,7 @@ export default function CreateSitePage() {
   const defaultMessage = userProfile?.defaultMessage;
   const whatsappNumber = userProfile?.whatsappNumber;
 
-  const templateEntry = templatesRegistry[selectedTemplateType];
+  const templateEntry = getTemplateByType(selectedTemplateType);
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -242,6 +249,11 @@ export default function CreateSitePage() {
       if (!normalizedName || !normalizedSlug) {
         setLoading(false);
         return toast.error("Please add both site name and URL slug.");
+      }
+
+      if (!templateEntry) {
+        setLoading(false);
+        return toast.error("Please select a valid template");
       }
 
       // 2. Create starter content that will be saved to Firebase

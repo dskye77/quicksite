@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { getSiteBySlug, updateSiteBySlug } from "@/lib/firestore";
-import EditorScreen from "@/screen/editor/EditorScreen";
-import { toast } from "sonner";
-import { Loader2, Save, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { Loader2, Save, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+
+import { getSiteBySlug, updateSiteBySlug } from "@/lib/firestore";
 import type { Site } from "@/lib/types";
-import { getAllThemes, themeRegistry } from "@/lib/themes";
+import { getAllThemes } from "@/lib/themes";
+
+import EditorScreen from "@/screen/editor/EditorScreen";
 
 interface PageProps {
   params: Promise<{

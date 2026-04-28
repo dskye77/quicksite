@@ -28,7 +28,7 @@ export interface Site {
   whatsappClicks?: number;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
-  content: Record<string, unknown>;
+  content: Record<string, any>;
 }
 
 export interface DashboardStats {

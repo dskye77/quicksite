@@ -3,8 +3,8 @@
 import type { Site } from "@/lib/types";
 import { setDeep } from "@/lib/helpers";
 
-import { templatesRegistry } from "@/lib/templates";
-import { themeRegistry } from "@/lib/themes";
+import { getTemplateByType } from "@/lib/templates";
+import { getTheme } from "@/lib/themes";
 
 interface EditorScreenProps {
   data: Site;
@@ -12,8 +12,8 @@ interface EditorScreenProps {
 }
 
 export default function EditorScreen({ data, onChange }: EditorScreenProps) {
-  const templateEntry = templatesRegistry[data.type];
-  const theme = themeRegistry[data.theme];
+  const templateEntry = getTemplateByType(data.type);
+  const theme = getTheme(data.theme);
 
   if (!templateEntry) {
     return (
