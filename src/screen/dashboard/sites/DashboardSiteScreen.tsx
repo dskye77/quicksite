@@ -18,6 +18,8 @@ import {
   X,
 } from "lucide-react";
 import { useDashboardStore } from "@/store/useDashboardStore";
+import { toast } from "sonner";
+
 import type { Site } from "@/lib/types";
 
 const SITE_DOMAIN_NAME = process.env.NEXT_PUBLIC_SITE_DOMAIN_NAME;
@@ -25,13 +27,20 @@ const DOMAIN_NAME = process.env.NEXT_PUBLIC_DOMAIN_NAME;
 // ── Delete Confirm Modal ──────────────────────────────────────────────────────
 
 function DeleteModal({ site, onClose }: { site: Site; onClose: () => void }) {
-  const { removeSite } = useDashboardStore();
+  const { profile, removeSite } = useDashboardStore();
   const [loading, setLoading] = useState(false);
+  const uid = profile?.uid;
 
   const handleDelete = async () => {
+    if (!profile || !uid) {
+      toast.error("You must be logged in to delete a site.");
+      setLoading(false);
+      onClose();
+      return;
+    }
     setLoading(true);
     try {
-      await removeSite(site.id);
+      await removeSite(site.id, uid);
     } finally {
       setLoading(false);
       onClose();
@@ -66,8 +75,11 @@ function DeleteModal({ site, onClose }: { site: Site; onClose: () => void }) {
           </button>
           <button
             onClick={handleDelete}
-            disabled={loading}
+            disabled={loading || !profile}
             className="flex-1 h-10 rounded-full bg-destructive text-white text-sm font-semibold hover:opacity-90 transition disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+            title={
+              !profile ? "You must be logged in to delete a site" : undefined
+            }
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
           </button>
@@ -80,14 +92,19 @@ function DeleteModal({ site, onClose }: { site: Site; onClose: () => void }) {
 // ── Site Card ─────────────────────────────────────────────────────────────────
 
 function SiteCard({ site }: { site: Site }) {
-  const { toggleSiteStatus, setDeleteConfirm } = useDashboardStore();
+  const { profile, toggleSiteStatus, setDeleteConfirm } = useDashboardStore();
   const [toggling, setToggling] = useState(false);
 
   // Handler for publish/unpublish button
   const handleToggle = async () => {
+    if (!profile || !profile.uid) {
+      // Do nothing or optionally show a warning
+      setToggling(false);
+      return;
+    }
     setToggling(true);
     try {
-      await toggleSiteStatus(site.id, site.status);
+      await toggleSiteStatus(site.id, site.status, profile.uid);
     } finally {
       setToggling(false);
     }
@@ -151,14 +168,18 @@ function SiteCard({ site }: { site: Site }) {
         <div className="flex items-center justify-between gap-3 mt-4">
           <button
             onClick={handleToggle}
-            disabled={toggling}
+            disabled={toggling || !profile}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition disabled:opacity-70 ${
               site.status === "published"
                 ? "bg-orange-500 text-white hover:bg-orange-600"
                 : "bg-emerald-500 text-white hover:bg-emerald-600"
             }`}
             title={
-              site.status === "published" ? "Unpublish Site" : "Publish Site"
+              !profile
+                ? "You must be logged in to publish/unpublish"
+                : site.status === "published"
+                  ? "Unpublish Site"
+                  : "Publish Site"
             }
           >
             {toggling ? (
@@ -187,8 +208,26 @@ function SiteCard({ site }: { site: Site }) {
 // ── Main Screen ───────────────────────────────────────────────────────────────
 
 export default function DashboardSiteScreen() {
-  const { sites, sitesLoading, ui, setDeleteConfirm } = useDashboardStore();
+  const { sites, sitesLoading, ui, setDeleteConfirm, profile } =
+    useDashboardStore();
   const [searchQuery, setSearchQuery] = useState("");
+
+  // If not logged in, show a message and skip site management UI
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32">
+        <Globe className="h-10 w-10 text-muted-foreground/20 mb-4" />
+        <h2 className="font-bold text-xl mb-2">
+          Please log in to manage sites
+        </h2>
+        <p className="text-muted-foreground max-w-sm text-center mb-4">
+          You need to be signed in to create, manage, publish, or delete your
+          sites.
+        </p>
+        {/* Optionally, add a login button here */}
+      </div>
+    );
+  }
 
   const siteToDelete = ui.deleteConfirmId
     ? (sites.find((s) => s.id === ui.deleteConfirmId) ?? null)
