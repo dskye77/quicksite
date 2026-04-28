@@ -1,4 +1,4 @@
-import { use } from "react";
+import { use, Suspense } from "react";
 import TemplatePreview from "@/screen/templates/preview/TemplatePreview";
 
 interface PageProps {
@@ -8,6 +8,10 @@ interface PageProps {
 }
 export default function TemplatePreviewPage({ params }: PageProps) {
   const { type } = use(params);
-  
-  return <TemplatePreview type={type}/>;
+
+  return (
+    <Suspense>
+      <TemplatePreview type={type} />
+    </Suspense>
+  );
 }
