@@ -122,20 +122,45 @@ export async function getSite(siteId: string): Promise<Site | null> {
 }
 
 /**
- * Fetches site data by slug. This is the primary function for the public /s/[slug] page.
+ * PUBLIC: Fetches a published site by slug only. No uid required.
+ * Used on the public /s/[slug] page.
  */
 export async function getSiteBySlug(slug: string): Promise<Site | null> {
   if (!slug) return null;
 
-  const q = query(collection(db, "sites"), where("slug", "==", slug));
+  const q = query(
+    collection(db, "sites"),
+    where("slug", "==", slug),
+    where("status", "==", "published")
+  );
   const snap = await getDocs(q);
-
   if (snap.empty) return null;
 
   const d = snap.docs[0];
   return serializeData<Site>({ id: d.id, ...d.data() });
 }
 
+/**
+ * PRIVATE: Fetches a site by slug for the owner (uid required).
+ * Used in the editor and dashboard. Returns draft or published.
+ */
+export async function getPrivateSiteBySlug(
+  uid: string,
+  slug: string
+): Promise<Site | null> {
+  if (!slug || !uid) return null;
+
+  const q = query(
+    collection(db, "sites"),
+    where("slug", "==", slug),
+    where("uid", "==", uid)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+
+  const d = snap.docs[0];
+  return serializeData<Site>({ id: d.id, ...d.data() });
+}
 export async function getUserSiteLimit(uid: string): Promise<number> {
   const profile = await getUserProfile(uid);
   if (!profile) return 3; // default to free
@@ -180,32 +205,75 @@ export async function createSite(
   return newRef.id;
 }
 
+/**
+ * Update a site only if the provided uid matches the site's uid.
+ * This prevents one user from updating another user's site.
+ */
 export async function updateSite(
   siteId: string,
   data: Partial<Omit<Site, "id" | "uid" | "createdAt">>,
+  uid: string // <-- enforce uid
 ): Promise<void> {
   if (!siteId) throw new Error("Site ID is required.");
+  const snap = await getDoc(doc(db, "sites", siteId));
+  if (!snap.exists()) throw new Error("Site not found");
+  const siteData = snap.data();
+  if (siteData.uid !== uid) throw new Error("Permission denied.");
+
   await updateDoc(doc(db, "sites", siteId), {
     ...data,
     updatedAt: serverTimestamp(),
   });
 }
 
+/**
+ * Update a site by slug, but require calling user to own the site (match on uid).
+ */
 export async function updateSiteBySlug(
+  uid: string,
   slug: string,
-  data: Partial<Omit<Site, "id" | "uid" | "createdAt">>,
+  data: Partial<Omit<Site, "id" | "uid" | "createdAt">>
 ): Promise<void> {
-  const siteId = await getSiteIdBySlug(slug);
-  if (!siteId) throw new Error("Site not found for slug: " + slug);
-  await updateSite(siteId, data);
+  // Only update if site with uid+slug is found (the user's site)
+  const q = query(
+    collection(db, "sites"),
+    where("slug", "==", slug),
+    where("uid", "==", uid)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) throw new Error("Site not found for slug: " + slug);
+  await updateDoc(doc(db, "sites", snap.docs[0].id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
 }
 
-export async function deleteSite(siteId: string): Promise<void> {
+/**
+ * Delete a site only if the provided uid matches the site's uid.
+ * Otherwise throw permission error.
+ */
+export async function deleteSite(siteId: string, uid: string): Promise<void> {
+  const snap = await getDoc(doc(db, "sites", siteId));
+  if (!snap.exists()) throw new Error("Site not found");
+  const siteData = snap.data();
+  if (siteData.uid !== uid) throw new Error("Permission denied.");
   await deleteDoc(doc(db, "sites", siteId));
 }
 
-export async function getSiteIdBySlug(slug: string): Promise<string | null> {
-  const q = query(collection(db, "sites"), where("slug", "==", slug));
+/**
+ * Find a siteId (doc.id) for a slug, optionally filtered by UID.
+ * If a uid is provided, only return the siteId if the uid matches.
+ */
+export async function getSiteIdBySlug(
+  slug: string,
+  uid?: string
+): Promise<string | null> {
+  let q;
+  if (uid) {
+    q = query(collection(db, "sites"), where("slug", "==", slug), where("uid", "==", uid));
+  } else {
+    q = query(collection(db, "sites"), where("slug", "==", slug));
+  }
   const snap = await getDocs(q);
   if (snap.empty) return null;
   return snap.docs[0].id;
@@ -237,6 +305,11 @@ export async function trackSiteEvent(
   site: Pick<Site, "id" | "uid" | "slug">,
   type: AnalyticsEventType,
 ): Promise<void> {
+  // Only increment analytics if site belongs to correct uid
+  const snap = await getDoc(doc(db, "sites", site.id));
+  if (!snap.exists()) throw new Error("Site not found");
+  if (snap.data().uid !== site.uid) throw new Error("Permission denied.");
+
   const metricField = type === "visit" ? "visits" : "whatsappClicks";
 
   await updateDoc(doc(db, "sites", site.id), {
@@ -262,3 +335,8 @@ export async function getAnalyticsEventsForUser(
     serializeData<AnalyticsEvent>({ id: d.id, ...d.data() }),
   );
 }
+
+// ---- Firestore Security Rules (cut/paste below into Firestore rules editor) ----
+/*
+
+*/

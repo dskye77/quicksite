@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useEffect, useState, use } from "react";
@@ -5,7 +6,8 @@ import Link from "next/link";
 import { Loader2, Save, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-import { getSiteBySlug, updateSiteBySlug } from "@/lib/firestore";
+import { useAuth } from "@/lib/useAuth";
+import { getPrivateSiteBySlug, updateSiteBySlug } from "@/lib/firestore";
 import type { Site } from "@/lib/types";
 import { getAllThemes } from "@/lib/themes";
 
@@ -18,6 +20,8 @@ interface PageProps {
 }
 
 export default function SiteEditorPage({ params }: PageProps) {
+  const { user } = useAuth();
+
   // Unwrap params for Next.js 15
   const resolvedParams = use(params);
   const siteSlug = resolvedParams.slug;
@@ -29,9 +33,15 @@ export default function SiteEditorPage({ params }: PageProps) {
   // Load site data from Firestore
   useEffect(() => {
     async function loadSite() {
+      if (!user || !user.uid) {
+        toast.error("You must be logged in to edit sites.");
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
-        const data = await getSiteBySlug(siteSlug);
+
+        const data = await getPrivateSiteBySlug(user.uid, siteSlug);
 
         if (data) {
           setSiteData(data);
@@ -46,16 +56,17 @@ export default function SiteEditorPage({ params }: PageProps) {
       }
     }
 
-    if (siteSlug) loadSite();
-  }, [siteSlug]);
+    if (siteSlug && user && user.uid) loadSite();
+    else if (!user || !user.uid) setLoading(false);
+  }, [siteSlug, user]);
 
   // Save updated state to Firestore
   const handleSave = async () => {
-    if (!siteData) return;
+    if (!siteData || !user || !user.uid) return;
 
     setIsSaving(true);
     try {
-      await updateSiteBySlug(siteSlug, siteData);
+      await updateSiteBySlug(user.uid, siteSlug, siteData);
       toast.success("All changes saved!");
     } catch (error) {
       console.error("Save Error:", error);

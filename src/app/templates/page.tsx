@@ -2,8 +2,9 @@
 import { Suspense } from "react";
 import TemplateGallery from "@/screen/templates/TemplatesScreen";
 export default function TemplatesPage() {
-  return;
-  <Suspense>
-    <TemplateGallery />
-  </Suspense>;
+  return (
+    <Suspense>
+      <TemplateGallery />
+    </Suspense>
+  );
 }

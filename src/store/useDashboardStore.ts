@@ -18,6 +18,7 @@ import {
 } from "@/lib/firestore";
 
 import type { Site, UserProfile, DashboardStats } from "@/lib/types";
+import { useId } from "react";
 
 // ─────────────────────────────────────────────────────────────
 // UI STATE
@@ -37,7 +38,7 @@ interface DashboardState {
   sites: Site[];
   profile: UserProfile | null;
 
-  siteLimit: number; 
+  siteLimit: number;
 
   stats: DashboardStats;
 
@@ -53,7 +54,7 @@ interface DashboardState {
    * Useful for client-side mounting or forced refreshes.
    */
   initialize: (uid: string) => Promise<void>;
-  
+
   fetchSites: (uid: string) => Promise<void>;
   fetchProfile: (uid: string) => Promise<void>;
 
@@ -68,11 +69,16 @@ interface DashboardState {
   editSite: (
     siteId: string,
     data: Partial<Omit<Site, "id" | "uid" | "createdAt">>,
+    uid: string,
   ) => Promise<void>;
 
-  removeSite: (siteId: string) => Promise<void>;
+  removeSite: (siteId: string, uid: string) => Promise<void>;
 
-  toggleSiteStatus: (siteId: string, current: Site["status"]) => Promise<void>;
+  toggleSiteStatus: (
+    siteId: string,
+    current: Site["status"],
+    uid: string,
+  ) => Promise<void>;
 
   saveProfile: (
     uid: string,
@@ -159,23 +165,20 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
   initialize: async (uid: string) => {
     // Start both loading indicators
-    set({ 
-      sitesLoading: true, 
-      profileLoading: true, 
-      sitesError: null, 
-      profileError: null 
+    set({
+      sitesLoading: true,
+      profileLoading: true,
+      sitesError: null,
+      profileError: null,
     });
 
     // Run fetches concurrently for performance
     // We use Settled to ensure one failing doesn't block the other
-    await Promise.allSettled([
-      get().fetchSites(uid),
-      get().fetchProfile(uid)
-    ]);
+    await Promise.allSettled([get().fetchSites(uid), get().fetchProfile(uid)]);
 
-    set({ 
-      sitesLoading: false, 
-      profileLoading: false 
+    set({
+      sitesLoading: false,
+      profileLoading: false,
     });
   },
 
@@ -257,8 +260,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   // EDIT SITE
   // ─────────────────────────────────────────────────────────
 
-  editSite: async (siteId, data) => {
-    await updateSite(siteId, data);
+  editSite: async (siteId, data, uid) => {
+    await updateSite(siteId, data, uid);
 
     set((state) => ({
       sites: state.sites.map((s) => (s.id === siteId ? { ...s, ...data } : s)),
@@ -269,7 +272,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   // REMOVE SITE
   // ─────────────────────────────────────────────────────────
 
-  removeSite: async (siteId) => {
+  removeSite: async (siteId, uid) => {
     const site = get().sites.find((s) => s.id === siteId);
     const publicIds = getContentPublicIds((site as any)?.content ?? {});
 
@@ -285,7 +288,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       );
     }
 
-    await deleteSite(siteId);
+    await deleteSite(siteId, uid);
 
     set((state) => {
       const sites = state.sites.filter((s) => s.id !== siteId);
@@ -302,10 +305,10 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   // TOGGLE STATUS
   // ─────────────────────────────────────────────────────────
 
-  toggleSiteStatus: async (siteId, current) => {
+  toggleSiteStatus: async (siteId, current, uid) => {
     const next = current === "published" ? "draft" : "published";
 
-    await updateSite(siteId, { status: next });
+    await updateSite(siteId, { status: next }, uid);
 
     set((state) => ({
       sites: state.sites.map((s) =>

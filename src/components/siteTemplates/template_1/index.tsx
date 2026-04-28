@@ -603,7 +603,6 @@ const template1StarterContent = ({
   whatsappNumber?: string;
   defaultMessage?: string;
 }) => {
-  // Helper for whatsapp links: returns {} if no phone, else valid object with no undefined/null fields
   const getWhatsappButtonLink = () => {
     if (!whatsappNumber) return {};
     return {
@@ -705,7 +704,7 @@ const template1Meta = {
 };
 const template1Config = {
   theme: "light",
-  category: "landing-page"
+  category: "landing-page",
 };
 export const template1 = {
   type: "template-1",
