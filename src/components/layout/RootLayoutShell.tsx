@@ -1,9 +1,8 @@
 "use client";
 
 // src/components/layout/RootLayoutShell.tsx
-// Shows Navbar + Footer only on marketing pages.
-// Auth pages (login, signup) and the dashboard get no shell.
-
+import { useTheme } from "next-themes";
+import { Toaster } from "sonner";
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
@@ -17,16 +16,27 @@ export default function RootLayoutShell({
 }) {
   const pathname = usePathname();
   const isMarketing = MARKETING_PATHS.includes(pathname);
+  const { resolvedTheme } = useTheme();
 
-  if (isMarketing) {
-    return (
-      <>
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
-      </>
-    );
-  }
+  return (
+    <>
+      {isMarketing && <Navbar />}
+      <main className="flex-1">{children}</main>
+      {isMarketing && <Footer />}
 
-  return <>{children}</>;
+      {/* Toaster is always mounted, works on every page */}
+      <Toaster
+        richColors
+        position="top-right"
+        theme={resolvedTheme as "light" | "dark"}
+        toastOptions={{
+          style: {
+            borderRadius: "10px",
+            fontSize: "14px",
+            fontWeight: "500",
+          },
+        }}
+      />
+    </>
+  );
 }

@@ -20,6 +20,8 @@ import {
 import { useDashboardStore } from "@/store/useDashboardStore";
 import type { Site } from "@/lib/types";
 
+const SITE_DOMAIN_NAME = process.env.NEXT_PUBLIC_SITE_DOMAIN_NAME;
+const DOMAIN_NAME = process.env.NEXT_PUBLIC_DOMAIN_NAME;
 // ── Delete Confirm Modal ──────────────────────────────────────────────────────
 
 function DeleteModal({ site, onClose }: { site: Site; onClose: () => void }) {
@@ -120,12 +122,13 @@ function SiteCard({ site }: { site: Site }) {
         </div>
 
         <a
-          href={`https://makesite.com.ng/s/${site.slug}`}
+          href={`https://${SITE_DOMAIN_NAME}${DOMAIN_NAME}/s/${site.slug}`}
           target="_blank"
           rel="noreferrer"
           className="text-xs text-primary hover:underline flex items-center gap-1 mb-4"
         >
-          makesite.com.ng/s/{site.slug} <ExternalLink className="h-3 w-3" />
+          {SITE_DOMAIN_NAME}
+          {DOMAIN_NAME}/s/{site.slug} <ExternalLink className="h-3 w-3" />
         </a>
 
         <div className="flex items-center justify-between pt-4 border-t border-border">
@@ -154,7 +157,9 @@ function SiteCard({ site }: { site: Site }) {
                 ? "bg-orange-500 text-white hover:bg-orange-600"
                 : "bg-emerald-500 text-white hover:bg-emerald-600"
             }`}
-            title={site.status === "published" ? "Unpublish Site" : "Publish Site"}
+            title={
+              site.status === "published" ? "Unpublish Site" : "Publish Site"
+            }
           >
             {toggling ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -174,7 +179,6 @@ function SiteCard({ site }: { site: Site }) {
             Delete
           </button>
         </div>
-   
       </div>
     </div>
   );

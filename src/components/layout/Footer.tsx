@@ -38,7 +38,13 @@ const SOCIALS = [
     label: "Instagram",
     href: "https://instagram.com/quicksite_ng",
     icon: () => (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="h-4 w-4"
+      >
         <rect width="20" height="20" x="2" y="2" rx="5" />
         <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
         <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
@@ -49,7 +55,13 @@ const SOCIALS = [
     label: "Twitter / X",
     href: "https://twitter.com/quicksite_ng",
     icon: () => (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="h-4 w-4"
+      >
         <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
       </svg>
     ),
@@ -58,12 +70,20 @@ const SOCIALS = [
     label: "TikTok",
     href: "https://tiktok.com/@quicksite_ng",
     icon: () => (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="h-4 w-4"
+      >
         <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
       </svg>
     ),
   },
 ];
+const SITE_STANDARD_NAME = process.env.NEXT_PUBLIC_SITE_STANDARD_NAME;
+const DOMAIN_NAME = process.env.NEXT_PUBLIC_DOMAIN_NAME;
 
 export default function Footer() {
   return (
@@ -77,12 +97,15 @@ export default function Footer() {
                 <Zap className="h-5 w-5 text-primary-foreground fill-current" />
               </div>
               <div>
-                <p className="font-bold text-lg leading-tight">MakeSite</p>
-                <p className="text-xs text-muted-foreground">.com.ng</p>
+                <p className="font-bold text-lg leading-tight">
+                  {SITE_STANDARD_NAME}
+                </p>
+                <p className="text-xs text-muted-foreground">{DOMAIN_NAME}</p>
               </div>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Your business online in minutes. Built proudly for Nigerian entrepreneurs 🇳🇬
+              Your business online in minutes. Built proudly for Nigerian
+              entrepreneurs 🇳🇬
             </p>
             <div className="flex gap-2">
               {SOCIALS.map(({ label, href, icon: Icon }) => (
@@ -123,8 +146,12 @@ export default function Footer() {
         <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center text-sm text-muted-foreground gap-3">
           <p>© {new Date().getFullYear()} GXU Studios LTD</p>
           <div className="flex items-center gap-4 text-xs">
-            <Link href="/privacy" className="hover:text-primary transition">Privacy</Link>
-            <Link href="/terms" className="hover:text-primary transition">Terms</Link>
+            <Link href="/privacy" className="hover:text-primary transition">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-primary transition">
+              Terms
+            </Link>
             <span>Made in Lagos 🇳🇬</span>
           </div>
         </div>

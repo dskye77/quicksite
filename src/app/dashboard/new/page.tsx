@@ -1,13 +1,179 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createSite, isSlugTaken } from "@/lib/firestore";
+import {
+  getUserSitesCount,
+  getUserSiteLimit,
+  createSite,
+  isSlugTaken,
+} from "@/lib/firestore";
 import { useAuth } from "@/hooks/useAuth";
+import { useDashboardStore } from "@/store/useDashboardStore";
 import { templatesRegistry, templatesMetaRegistryArray } from "@/lib/templates";
 import { Layout, ArrowRight, CheckCircle2, Loader2, Eye } from "lucide-react";
 import { toast } from "sonner";
 
+const SITE_DOMAIN_NAME = process.env.NEXT_PUBLIC_SITE_DOMAIN_NAME;
+const DOMAIN_NAME = process.env.NEXT_PUBLIC_DOMAIN_NAME;
+
+// ---- Site Name and Slug Form ----
+function SiteFormInputs({
+  formData,
+  setFormData,
+  loading,
+  onSlugChange,
+}: {
+  formData: { name: string; slug: string; type: string };
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  loading: boolean;
+  onSlugChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <>
+      <div className="space-y-4">
+        <label className="block">
+          <span className="text-sm font-bold ml-1">Site Name</span>
+          <input
+            required
+            type="text"
+            className="w-full mt-1 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary outline-none transition-all"
+            placeholder="My Business Page"
+            value={formData.name}
+            onChange={(e) =>
+              setFormData((prev: any) => ({ ...prev, name: e.target.value }))
+            }
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-bold ml-1">Desired URL</span>
+          <div className="flex mt-1">
+            <span className="inline-flex items-center px-4 rounded-l-xl border border-r-0 bg-slate-50 text-slate-400 text-sm">
+              {SITE_DOMAIN_NAME}
+              {DOMAIN_NAME}/s/
+            </span>
+            <input
+              required
+              type="text"
+              className="flex-1 px-4 py-3 rounded-r-xl border border-slate-200 focus:ring-2 focus:ring-primary outline-none transition-all"
+              placeholder="my-site"
+              value={formData.slug}
+              onChange={onSlugChange}
+            />
+          </div>
+        </label>
+      </div>
+      <div className="pt-4">
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full h-14 bg-primary text-primary-foreground rounded-2xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50"
+        >
+          {loading ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            <>
+              Create Site <ArrowRight size={20} />
+            </>
+          )}
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ---- Template Picker ----
+function TemplatePicker({
+  selectedType,
+  onTemplateChange,
+  slugForPreview,
+  nameForPreview,
+}: {
+  selectedType: string;
+  onTemplateChange: (type: string) => void;
+  slugForPreview: string;
+  nameForPreview: string;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-bold ml-1">Template</span>
+        <Link href={`/templates?name=${nameForPreview}&slug=${slugForPreview}`}>
+          <button className="text-primary text-sm font-semibold rounded-full px-3 py-1 transition-all border border-primary cursor-pointer hover:scale-102">
+            View all
+          </button>
+        </Link>
+      </div>
+      <div className="grid gap-4">
+        {templatesMetaRegistryArray.map((meta) => {
+          const selected = selectedType === meta.type;
+          return (
+            <div
+              className={[
+                "relative p-4 rounded-2xl border-2 transition-all cursor-pointer",
+                selected ? "border-primary bg-primary/5" : "",
+              ].join(" ")}
+              key={meta.type}
+              onClick={() => onTemplateChange(meta.type)}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={[
+                    "p-2 rounded-lg border shadow-sm transition-all",
+                    selected
+                      ? "bg-white border-primary"
+                      : "bg-slate-50 border-slate-200",
+                  ].join(" ")}
+                >
+                  <Layout
+                    size={18}
+                    className={selected ? "text-primary" : "text-slate-400"}
+                  />
+                </div>
+                <div>
+                  <h3
+                    className={[
+                      "font-bold text-sm transition-colors",
+                      selected ? "text-primary" : "text-foreground",
+                    ].join(" ")}
+                  >
+                    {meta?.title ?? "Production Template"}
+                  </h3>
+                  <p
+                    className={[
+                      "text-[10px] transition-colors",
+                      selected ? "text-primary/80" : "text-slate-500",
+                    ].join(" ")}
+                  >
+                    {meta?.description ??
+                      "Ready-to-ship layout for catalogue sites."}
+                  </p>
+                </div>
+              </div>
+              {selected && (
+                <CheckCircle2
+                  className="absolute top-2 right-2 text-primary drop-shadow"
+                  size={16}
+                />
+              )}
+            </div>
+          );
+        })}
+        <Link
+          href={`/templates/${selectedType}?from=/dashboard/new&name=${nameForPreview}&slug=${slugForPreview}`}
+          className="h-10 inline-flex items-center justify-center gap-2 rounded-full border bg-primary text-sm font-semibold text-primary-foreground transition"
+        >
+          <Eye size={16} />
+          Preview Template
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ---- Main Page ----
 export default function CreateSitePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -15,12 +181,20 @@ export default function CreateSitePage() {
   const templateTypeFromQuery = searchParams.get("template");
   const selectedTemplateType = templateTypeFromQuery || "template-1";
 
+  const paramsName = searchParams.get("name");
+  const paramsSlug = searchParams.get("slug");
+
+  // get profile data
+  const userProfile = useDashboardStore().profile;
+  const defaultMessage = userProfile?.defaultMessage;
+  const whatsappNumber = userProfile?.whatsappNumber;
+
   const templateEntry = templatesRegistry[selectedTemplateType];
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    slug: "",
+    name: paramsName || "",
+    slug: paramsSlug || "",
     type: selectedTemplateType,
   });
 
@@ -29,13 +203,14 @@ export default function CreateSitePage() {
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
-    setFormData({ ...formData, slug: val });
+    setFormData((prev) => ({ ...prev, slug: val }));
   };
+
   const handleTemplateChange = (newTemplateType: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("template", newTemplateType);
     router.replace(`?${params.toString()}`);
-    setFormData({ ...formData, type: newTemplateType });
+    setFormData((prev) => ({ ...prev, type: newTemplateType }));
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -44,15 +219,25 @@ export default function CreateSitePage() {
 
     setLoading(true);
     try {
+      // Check site limit first
+      const currentCount = await getUserSitesCount(user.uid); // import this
+      const limit = await getUserSiteLimit(user.uid); // import this
+
+      if (currentCount >= limit) {
+        setLoading(false);
+        return toast.error(
+          `You can only create ${limit} sites on the free plan.`,
+        );
+      }
+      const normalizedName = formData.name.trim();
+      const normalizedSlug = formData.slug.trim();
+
       // 1. Validate Slug
-      const taken = await isSlugTaken(formData.slug);
+      const taken = await isSlugTaken(normalizedSlug);
       if (taken) {
         setLoading(false);
         return toast.error("This URL is already taken.");
       }
-
-      const normalizedName = formData.name.trim();
-      const normalizedSlug = formData.slug.trim();
 
       if (!normalizedName || !normalizedSlug) {
         setLoading(false);
@@ -60,7 +245,13 @@ export default function CreateSitePage() {
       }
 
       // 2. Create starter content that will be saved to Firebase
-      const content = templateEntry.starterContent(normalizedName);
+      const content = templateEntry.starterContent({
+        selectedTitle: normalizedName,
+        defaultMessage,
+        whatsappNumber,
+      });
+
+      const theme = templateEntry.config.theme;
 
       // 3. Construct the final object
 
@@ -68,7 +259,7 @@ export default function CreateSitePage() {
         slug: normalizedSlug,
         type: formData.type,
         name: normalizedName,
-        theme: "",
+        theme,
         status: "draft",
         visits: 0,
         whatsappClicks: 0,
@@ -99,122 +290,23 @@ export default function CreateSitePage() {
           Start with a production-ready online catalogue template.
         </p>
       </div>
-
       <form onSubmit={handleCreate} className="grid md:grid-cols-3 gap-8">
         {/* Left: Inputs */}
         <div className="md:col-span-2 space-y-6 bg-card p-8 rounded-3xl border shadow-sm">
-          <div className="space-y-4">
-            <label className="block">
-              <span className="text-sm font-bold ml-1">Site Name</span>
-              <input
-                required
-                type="text"
-                className="w-full mt-1 px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary outline-none transition-all"
-                placeholder="My Business Page"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-sm font-bold ml-1">Desired URL</span>
-              <div className="flex mt-1">
-                <span className="inline-flex items-center px-4 rounded-l-xl border border-r-0 bg-slate-50 text-slate-400 text-sm">
-                  makesite.com/s/
-                </span>
-                <input
-                  required
-                  type="text"
-                  className="flex-1 px-4 py-3 rounded-r-xl border border-slate-200 focus:ring-2 focus:ring-primary outline-none transition-all"
-                  placeholder="my-site"
-                  value={formData.slug}
-                  onChange={handleSlugChange}
-                />
-              </div>
-            </label>
-          </div>
-
-          <div className="pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-14 bg-primary text-primary-foreground rounded-2xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all disabled:opacity-50"
-            >
-              {loading ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <>
-                  Create Site <ArrowRight size={20} />
-                </>
-              )}
-            </button>
-          </div>
+          <SiteFormInputs
+            formData={formData}
+            setFormData={setFormData}
+            loading={loading}
+            onSlugChange={handleSlugChange}
+          />
         </div>
-
         {/* Right: Template Picker */}
-        <div className="space-y-4">
-          <p className="text-sm font-bold ml-1">Template</p>
-          <div className="grid gap-4">
-            {templatesMetaRegistryArray.map((meta) => {
-              const selected = formData.type === meta.type;
-              return (
-                <div
-                  className={
-                    [
-                      "relative p-4 rounded-2xl border-2 transition-all cursor-pointer",
-                      selected
-                        ? "border-primary bg-primary/5"
-                        : "border-slate-200 bg-white hover:border-primary"
-                    ].join(" ")
-                  }
-                  key={meta.type}
-                  onClick={() => handleTemplateChange(meta.type)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={[
-                        "p-2 rounded-lg border shadow-sm transition-all",
-                        selected ? "bg-white border-primary" : "bg-slate-50 border-slate-200"
-                      ].join(" ")}
-                    >
-                      <Layout size={18} className={selected ? "text-primary" : "text-slate-400"} />
-                    </div>
-                    <div>
-                      <h3
-                        className={[
-                          "font-bold text-sm transition-colors",
-                          selected ? "text-primary" : "text-foreground"
-                        ].join(" ")}
-                      >
-                        {meta?.title ?? "Production Template"}
-                      </h3>
-                      <p className={["text-[10px] transition-colors", selected ? "text-primary/80" : "text-slate-500"].join(" ")}>
-                        {meta?.description ?? "Ready-to-ship layout for catalogue sites."}
-                      </p>
-                    </div>
-                  </div>
-                  {selected && (
-                    <CheckCircle2
-                      className="absolute top-2 right-2 text-primary drop-shadow"
-                      size={16}
-                    />
-                  )}
-                </div>
-              );
-            })}
-
-            <Link
-              href={`/templates/${formData.type}`}
-              className="h-10 inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white text-sm font-semibold hover:bg-slate-50 transition"
-            >
-              <Eye size={16} />
-              Preview Template
-            </Link>
-          </div>
-        </div>
-  
+        <TemplatePicker
+          selectedType={formData.type}
+          onTemplateChange={handleTemplateChange}
+          slugForPreview={formData.slug}
+          nameForPreview={formData.name}
+        />
       </form>
     </div>
   );

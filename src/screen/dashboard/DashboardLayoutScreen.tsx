@@ -2,7 +2,7 @@
 "use client";
 
 // src/features/dashboard/DashboardLayoutScreen.tsx
-// Updated to link directly to the new site creation page.
+// Updated to handle global data initialization via Zustand
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -30,6 +30,9 @@ const SIDEBAR_LINKS = [
   { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 
+const SITE_STANDARD_NAME = process.env.NEXT_PUBLIC_SITE_STANDARD_NAME;
+const DOMAIN_NAME = process.env.NEXT_PUBLIC_DOMAIN_NAME;
+
 export default function DashboardLayoutScreen({
   children,
 }: {
@@ -40,14 +43,28 @@ export default function DashboardLayoutScreen({
   const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
+
   const { user, loading, logOut } = useAuth();
-  const { ui, setSidebarOpen } = useDashboardStore(); // Removed setCreateModal
+
+  // ── Zustand Store ──────────────────────────────────────────
+  const { ui, setSidebarOpen, initialize } = useDashboardStore();
 
   useEffect(() => setMounted(true), []);
 
+  // Handle Authentication Redirect
   useEffect(() => {
     if (!loading && !user) router.push("/login");
   }, [user, loading, router]);
+
+  // ── INITIALIZE DATA ────────────────────────────────────────
+  // This triggers once when the user is logged in.
+  // Because it's in the layout, it persists across dashboard sub-pages.
+  useEffect(() => {
+    if (user?.uid) {
+      initialize(user.uid);
+    }
+  }, [user?.uid, initialize]);
+  // ───────────────────────────────────────────────────────────
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -97,9 +114,9 @@ export default function DashboardLayoutScreen({
             </div>
             <div>
               <p className="font-bold text-base text-sidebar-foreground">
-                MakeSite
+                {SITE_STANDARD_NAME}
               </p>
-              <p className="text-[10px] text-muted-foreground">.com.ng</p>
+              <p className="text-[10px] text-muted-foreground">{DOMAIN_NAME}</p>
             </div>
           </Link>
         </div>
@@ -201,7 +218,6 @@ export default function DashboardLayoutScreen({
               </button>
             )}
 
-            {/* Swapped Modal Trigger for Direct Link */}
             <Link
               href="/dashboard/new"
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full h-9 px-4 text-sm font-semibold hover:opacity-90 transition cursor-pointer"

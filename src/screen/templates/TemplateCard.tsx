@@ -27,7 +27,9 @@ export function TemplateCard({
     >
       {/* Placeholder image */}
       <div className="relative aspect-4/3 overflow-hidden bg-linear-to-br from-muted to-muted/50 flex items-center justify-center">
-        <div className="text-4xl font-bold text-muted-foreground/20">{title[0]}</div>
+        <div className="text-4xl font-bold text-muted-foreground/20">
+          {title[0]}
+        </div>
         <div className="absolute top-3 left-3 bg-background/90 backdrop-blur px-2.5 py-0.5 rounded-full text-xs font-semibold border border-transparent">
           {category}
         </div>

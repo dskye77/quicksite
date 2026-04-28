@@ -1,6 +1,9 @@
-// src/features/home/HeroSection.tsx
+// src/screen/home/HeroSection.tsx
 import { ArrowRight, Star, Sparkles, MessageCircle } from "lucide-react";
 import Link from "next/link";
+
+const SITE_DOMAIN_NAME = process.env.NEXT_PUBLIC_SITE_DOMAIN_NAME;
+const DOMAIN_NAME = process.env.NEXT_PUBLIC_DOMAIN_NAME;
 
 export default function HeroSection() {
   return (
@@ -18,7 +21,9 @@ export default function HeroSection() {
             <span className="bg-secondary text-white rounded-full px-2 py-0.5 text-[10px] font-bold">
               NEW
             </span>
-            <span className="text-foreground/80">WhatsApp orders are live 🇳🇬</span>
+            <span className="text-foreground/80">
+              WhatsApp orders are live 🇳🇬
+            </span>
           </div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05] text-balance">
@@ -27,7 +32,11 @@ export default function HeroSection() {
               <span className="relative z-10 bg-linear-to-br from-primary to-primary/60 bg-clip-text text-transparent">
                 today
               </span>
-              <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" fill="none">
+              <svg
+                className="absolute -bottom-2 left-0 w-full"
+                viewBox="0 0 200 12"
+                fill="none"
+              >
                 <path
                   d="M2 9C50 3 150 3 198 9"
                   stroke="var(--secondary)"
@@ -96,7 +105,8 @@ export default function HeroSection() {
                 <div className="h-2.5 w-2.5 rounded-full bg-primary/50" />
               </div>
               <div className="flex-1 bg-background rounded-md h-5 text-[10px] flex items-center px-2 text-muted-foreground">
-                makesite.com.ng/s/amakachef
+                {SITE_DOMAIN_NAME}
+                {DOMAIN_NAME}/s/amakachef
               </div>
             </div>
 
@@ -109,7 +119,9 @@ export default function HeroSection() {
                 </div>
                 <div>
                   <p className="font-bold text-sm">Amaka&apos;s Kitchen</p>
-                  <p className="text-[10px] text-muted-foreground">Lagos, Nigeria 🇳🇬</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    Lagos, Nigeria 🇳🇬
+                  </p>
                 </div>
               </div>
 
@@ -126,7 +138,10 @@ export default function HeroSection() {
               {/* Product grid */}
               <div className="grid grid-cols-3 gap-2">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="aspect-square rounded-xl bg-muted/60 border border-dashed border-border" />
+                  <div
+                    key={i}
+                    className="aspect-square rounded-xl bg-muted/60 border border-dashed border-border"
+                  />
                 ))}
               </div>
             </div>
@@ -139,7 +154,10 @@ export default function HeroSection() {
             </div>
             <div>
               <p className="text-xs font-semibold">Site published!</p>
-              <p className="text-[10px] text-muted-foreground">makesite.com.ng/s/amakachef</p>
+              <p className="text-[10px] text-muted-foreground">
+                {SITE_DOMAIN_NAME}
+                {DOMAIN_NAME}/s/amakachef
+              </p>
             </div>
           </div>
 
@@ -150,7 +168,9 @@ export default function HeroSection() {
             </div>
             <div>
               <p className="text-xs font-semibold">+₦18,500 today</p>
-              <p className="text-[10px] text-muted-foreground">3 new WhatsApp orders</p>
+              <p className="text-[10px] text-muted-foreground">
+                3 new WhatsApp orders
+              </p>
             </div>
           </div>
         </div>

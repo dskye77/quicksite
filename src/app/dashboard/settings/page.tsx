@@ -1,4 +1,4 @@
-import DashboardSettingsScreen from "@/features/dashboard/settings/DashboardSettings";
+import DashboardSettingsScreen from "@/screen/dashboard/settings/DashboardSettings";
 export default function DashboardSettingsPage() {
   return <DashboardSettingsScreen />;
 }

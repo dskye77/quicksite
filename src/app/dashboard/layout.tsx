@@ -1,5 +1,5 @@
 // src/app/dashboard/page.tsx
-import DashboardLayoutScreen from "@/features/dashboard/DashboardLayoutScreen";
+import DashboardLayoutScreen from "@/screen/dashboard/DashboardLayoutScreen";
 export default function DashboardLayout({
   children,
 }: {

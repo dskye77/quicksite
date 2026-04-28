@@ -4,7 +4,8 @@
 import Template1, {
   template1StarterContent,
   template1Meta,
-} from "@/assets/siteTemplates/template_1/index";
+  template1Config,
+} from "@/components/siteTemplates/template_1/index";
 
 import type { ComponentType } from "react";
 
@@ -23,6 +24,9 @@ export interface TemplateComponentProps {
 
 type AnyObject = Record<string, any>;
 
+export interface TemplateConfig {
+  theme: string;
+}
 export interface TemplateMeta {
   type: string;
   title: string;
@@ -33,8 +37,9 @@ export interface TemplateMeta {
 export interface TemplateRegistryItem {
   id: string;
   template: ComponentType<any>;
+  config: TemplateConfig;
   meta: TemplateMeta;
-  starterContent: (selectedTitle: string) => any;
+  starterContent: any;
 }
 
 /* ---------------- REGISTRY ---------------- */
@@ -43,9 +48,9 @@ export const templatesRegistry: Record<string, TemplateRegistryItem> = {
   "template-1": {
     id: "template-1",
     template: Template1,
+    config: template1Config,
     meta: { type: "template-1", ...template1Meta },
-
-    starterContent: () => template1StarterContent,
+    starterContent: template1StarterContent,
   },
 };
 

@@ -1,10 +1,15 @@
 // src/features/templates/TemplateGallery.tsx
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { TemplateCard } from "./TemplateCard";
-import { TEMPLATE_CATALOG } from "@/lib/templateCatalog";
+import { templatesMetaRegistryArray } from "@/lib/templates";
 
 export default function TemplateGallery() {
+  const searchParams = useSearchParams();
+  const paramsName = searchParams.get("name");
+  const paramsSlug = searchParams.get("slug");
+
   return (
     <section className="pt-16 pb-20">
       <div className="container mx-auto px-4">
@@ -24,15 +29,15 @@ export default function TemplateGallery() {
 
         {/* Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {TEMPLATE_CATALOG.map((template, i) => (
+          {templatesMetaRegistryArray.map((template, i) => (
             <TemplateCard
-              key={template.id}
-              type={template.id}
+              key={template.type}
+              type={template.type}
               title={template.title}
               description={template.description}
               category={template.category}
-              previewHref={`/templates/${template.id}`}
-              useHref={`/dashboard/new?template=${template.id}`}
+              previewHref={`/templates/${template.type}?name=${paramsName}&slug=${paramsSlug}`}
+              useHref={`/dashboard/new?template=${template.type}&name=${paramsName}&slug=${paramsSlug}`}
               delay={i * 40}
             />
           ))}

@@ -1,77 +1,74 @@
+"use client";
+
+import { use } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { isValidTemplate, templatesRegistry } from "@/lib/templates";
 
-interface TemplatePreviewPageProps {
-  params: Promise<{ type: string }>;
+import { ArrowLeft } from "lucide-react";
+import { templatesRegistry } from "@/lib/templates";
+import { getTheme } from "@/lib/themes";
+
+interface PageProps {
+  params: Promise<{
+    type: string;
+  }>;
 }
 
-export default async function TemplatePreviewPage({
-  params,
-}: TemplatePreviewPageProps) {
-  const { type } = await params;
+export default function TemplatesSitePage({ params }: PageProps) {
+  const { type } = use(params);
 
-  if (!type || !isValidTemplate(type)) {
-    notFound();
-  }
+  const searchParams = useSearchParams();
+  const paramsName = searchParams.get("name") || "";
+  const paramsSlug = searchParams.get("slug") || "";
 
-  const templateMeta = templatesRegistry[type].meta;
+  const from =
+    searchParams.get("from") + `?name=${paramsName}&slug=${paramsSlug}` || "/";
 
-  if (!templateMeta) {
-    notFound();
-  }
+  const templateEntry = templatesRegistry[type];
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Template Preview:{" "}
-            <span className="font-semibold text-foreground">{type}</span>
-          </p>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/templates"
-              className="inline-flex items-center justify-center h-9 px-4 rounded-full border border-border text-sm font-medium hover:bg-muted transition"
-            >
-              Back
-            </Link>
-            <Link
-              href={`/dashboard/new?template=${type}`}
-              className="inline-flex items-center justify-center h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition"
-            >
-              Use This Template
-            </Link>
-          </div>
-        </div>
+  // ── Not Found ──────────────────────────────
+  if (!templateEntry) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center text-center px-6">
+        <h1 className="text-2xl font-bold">Site not available</h1>
+        <p className="text-slate-500 mt-2">This template is not found</p>
       </div>
-      <section className="mx-auto max-w-5xl px-4 py-12">
-        <div className="rounded-3xl border border-border bg-card p-8 md:p-12">
-          <p className="inline-flex items-center rounded-full bg-primary/10 text-primary text-xs font-semibold px-3 py-1 mb-4">
-            {templateMeta.category}
-          </p>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-            {templateMeta.title}
-          </h1>
-          <p className="text-muted-foreground max-w-2xl mb-8">
-            {templateMeta.description}
-          </p>
-          <div className="grid sm:grid-cols-3 gap-4">
-            <PreviewCard title="Mobile-first layout" />
-            <PreviewCard title="Catalogue sections" />
-            <PreviewCard title="WhatsApp conversion CTA" />
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
+    );
+  }
 
-function PreviewCard({ title }: { title: string }) {
+  const themeName = templateEntry.config.theme;
+  const theme = getTheme(themeName);
+  const Template = templateEntry.template;
+  const templateData = templateEntry.starterContent("");
+
+  // ── Renderer ────────────────────────────
   return (
-    <div className="rounded-2xl border border-border bg-background p-4">
-      <div className="aspect-video rounded-xl bg-muted mb-3" />
-      <p className="text-sm font-medium">{title}</p>
+    <div className="min-h-screen bg-white text-slate-900 ">
+      <style>{theme.css}</style>
+      {/* Preview Toolbar */}
+      <header className="h-16 border-b bg-white flex items-center justify-between px-6 shrink-0 z-50 shadow-sm">
+        <div className="flex items-center gap-4">
+          <Link
+            href={from}
+            className="flex  p-2 hover:bg-slate-100 rounded-full transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/dashboard/new?template=${type}&name=${paramsName}&slug=${paramsSlug}`}
+          >
+            <button className="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-full font-bold text-sm transition-all shadow-md active:scale-95 disabled:opacity-50">
+              use template
+            </button>
+          </Link>
+        </div>
+      </header>
+      <div>
+        <Template isEditor={false} content={templateData} />
+      </div>
     </div>
   );
 }

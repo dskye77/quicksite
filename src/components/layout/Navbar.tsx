@@ -29,13 +29,28 @@ const NAV_LINKS = [
 function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+        fill="#EA4335"
+      />
     </svg>
   );
 }
+
+const SITE_STANDARD_NAME = process.env.NEXT_PUBLIC_SITE_STANDARD_NAME;
+const DOMAIN_NAME = process.env.NEXT_PUBLIC_DOMAIN_NAME;
 
 export default function Navbar() {
   const { user, logOut } = useAuth();
@@ -52,7 +67,10 @@ export default function Navbar() {
   // Close dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setDropdownOpen(false);
       }
     }
@@ -67,10 +85,16 @@ export default function Navbar() {
   };
 
   const initials = user?.displayName
-    ? user.displayName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
-    : user?.email?.slice(0, 2).toUpperCase() ?? "ME";
+    ? user.displayName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : (user?.email?.slice(0, 2).toUpperCase() ?? "ME");
 
-  const firstName = user?.displayName?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "";
+  const firstName =
+    user?.displayName?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "";
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -81,15 +105,17 @@ export default function Navbar() {
             <Zap className="h-4 w-4 text-primary-foreground fill-current" />
           </div>
           <div className="leading-none">
-            <p className="font-bold text-base">MakeSite</p>
-            <p className="text-[10px] text-muted-foreground">.com.ng</p>
+            <p className="font-bold text-base">{SITE_STANDARD_NAME}</p>
+            <p className="text-[10px] text-muted-foreground">{DOMAIN_NAME}</p>
           </div>
         </Link>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-0.5">
           {NAV_LINKS.map(({ label, href }) => {
-            const active = pathname === href || (href !== "/" && pathname.startsWith(href.split("#")[0]));
+            const active =
+              pathname === href ||
+              (href !== "/" && pathname.startsWith(href.split("#")[0]));
             return (
               <Link
                 key={label}
@@ -111,11 +137,17 @@ export default function Navbar() {
           {/* Theme toggle */}
           {mounted && (
             <button
-              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+              onClick={() =>
+                setTheme(resolvedTheme === "dark" ? "light" : "dark")
+              }
               className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition"
               title="Toggle theme"
             >
-              {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {resolvedTheme === "dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
             </button>
           )}
 
@@ -138,8 +170,12 @@ export default function Navbar() {
               {dropdownOpen && (
                 <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-card shadow-xl overflow-hidden z-50">
                   <div className="px-4 py-3 border-b border-border bg-muted/30">
-                    <p className="text-sm font-semibold truncate">{user.displayName ?? firstName}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    <p className="text-sm font-semibold truncate">
+                      {user.displayName ?? firstName}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user.email}
+                    </p>
                   </div>
                   <Link
                     href="/dashboard"
@@ -181,7 +217,11 @@ export default function Navbar() {
             className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg hover:bg-muted transition ml-1"
             onClick={() => setMobileOpen((p) => !p)}
           >
-            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {mobileOpen ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Menu className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { getSiteBySlug } from "@/lib/firestore";
+import { getSiteBySlug, trackSiteEvent } from "@/lib/firestore";
 
-import SiteRenderer from "@/features/s/SiteRenderer";
+import SiteRenderer from "@/screen/s/SiteRenderer";
 import { Loader2 } from "lucide-react";
 import type { Site } from "@/lib/types";
 
@@ -23,9 +23,20 @@ export default function PublicSitePage({ params }: PageProps) {
     async function load() {
       try {
         setLoading(true);
+
         const data = await getSiteBySlug(slug);
+
         if (data && data.status === "published") {
           setSite(data);
+
+          const sessionKey = `visited_${slug}`;
+          if (!sessionStorage.getItem(sessionKey)) {
+            sessionStorage.setItem(sessionKey, "1");
+            await trackSiteEvent(
+              { id: data.id, uid: data.uid, slug: data.slug },
+              "visit",
+            );
+          }
         } else {
           setSite(null);
         }

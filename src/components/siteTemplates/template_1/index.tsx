@@ -1,7 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import type { TemplateProps, TemplateComponentProps } from "@/lib/templates";
+import type {
+  TemplateProps,
+  TemplateComponentProps,
+  TemplateConfig,
+} from "@/lib/templates";
+
+import TemplateImage from "@/components/shared/TemplateImage";
+import CtaLink from "@/components/shared/CtaLinkModal";
 
 export default function LandingPage({
   isEditor,
@@ -40,10 +47,13 @@ export default function LandingPage({
     </div>
   );
 }
+
+// ─── Sections ─────────────────────────────────────────────────────────────────
+
 function Navbar({ isEditor, content, onUpdate }: TemplateComponentProps) {
   const links = content?.navbar?.links ?? [
     "Features",
-    "Testimonials",
+    "About",
     "Pricing",
     "Contact",
   ];
@@ -59,13 +69,18 @@ function Navbar({ isEditor, content, onUpdate }: TemplateComponentProps) {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <div className="flex items-center gap-3">
           <div
-            className="flex h-10 w-10 items-center justify-center rounded-2xl font-bold"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl text-xl font-bold"
             style={{
               background: "var(--qs-primary)",
               color: "var(--qs-primary-fg)",
             }}
+            contentEditable={isEditor}
+            suppressContentEditableWarning
+            onBlur={(e) =>
+              onUpdate("navbar.logo", e.currentTarget.textContent?.trim())
+            }
           >
-            QS
+            {content?.navbar?.logo ?? "🚀"}
           </div>
 
           <h1
@@ -76,7 +91,7 @@ function Navbar({ isEditor, content, onUpdate }: TemplateComponentProps) {
               onUpdate("navbar.title", e.currentTarget.textContent?.trim())
             }
           >
-            {content?.navbar?.title ?? "QuickSite"}
+            {content?.navbar?.title ?? "My Business"}
           </h1>
         </div>
 
@@ -91,6 +106,7 @@ function Navbar({ isEditor, content, onUpdate }: TemplateComponentProps) {
     </header>
   );
 }
+
 function Hero({ isEditor, content, onUpdate }: TemplateComponentProps) {
   return (
     <section className="mx-auto max-w-6xl px-6 py-20 md:py-28">
@@ -103,8 +119,13 @@ function Hero({ isEditor, content, onUpdate }: TemplateComponentProps) {
               border: "1px solid var(--qs-border)",
               color: "var(--qs-text-muted)",
             }}
+            contentEditable={isEditor}
+            suppressContentEditableWarning
+            onBlur={(e) =>
+              onUpdate("hero.badge", e.currentTarget.textContent?.trim())
+            }
           >
-            {content?.hero?.badge ?? "Build faster. Launch smarter."}
+            {content?.hero?.badge ?? "✨ New & Improved"}
           </div>
 
           <h2
@@ -116,7 +137,7 @@ function Hero({ isEditor, content, onUpdate }: TemplateComponentProps) {
             }
           >
             {content?.hero?.title ??
-              "Create a landing page that turns visitors into customers."}
+              "Transform Your Business With Our Solution"}
           </h2>
 
           <p
@@ -129,100 +150,75 @@ function Hero({ isEditor, content, onUpdate }: TemplateComponentProps) {
             }
           >
             {content?.hero?.desc ??
-              "QuickSite helps businesses launch polished, mobile-friendly pages in minutes — with clean design, editable content, and a structure that fits almost any brand."}
+              "We help businesses grow faster with innovative solutions designed to simplify your workflow and maximize results."}
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
-            <button
-              className="rounded-xl px-6 py-3 font-semibold transition-transform hover:scale-[1.02]"
+            <CtaLink
+              isEditor={isEditor}
+              label={content?.hero?.primaryButton ?? "Get Started"}
+              linkConfig={content?.hero?.primaryButtonLink}
+              onLabelChange={(v) => onUpdate("hero.primaryButton", v)}
+              onLinkChange={(cfg) => onUpdate("hero.primaryButtonLink", cfg)}
+              className="rounded-xl px-6 py-3 font-semibold transition-transform hover:scale-[1.02] inline-block"
               style={{
                 background: "var(--qs-primary)",
                 color: "var(--qs-primary-fg)",
               }}
-            >
-              {content?.hero?.primaryButton ?? "Start Free"}
-            </button>
+            />
 
-            <button
-              className="rounded-xl px-6 py-3 font-semibold transition-transform hover:scale-[1.02]"
+            <CtaLink
+              isEditor={isEditor}
+              label={content?.hero?.secondaryButton ?? "Learn More"}
+              linkConfig={content?.hero?.secondaryButtonLink}
+              onLabelChange={(v) => onUpdate("hero.secondaryButton", v)}
+              onLinkChange={(cfg) => onUpdate("hero.secondaryButtonLink", cfg)}
+              className="rounded-xl px-6 py-3 font-semibold transition-transform hover:scale-[1.02] inline-block"
               style={{
                 background: "var(--qs-bg-alt)",
                 color: "var(--qs-text)",
                 border: "1px solid var(--qs-border)",
               }}
-            >
-              {content?.hero?.secondaryButton ?? "See Demo"}
-            </button>
+            />
           </div>
 
           <div className="mt-8 flex flex-wrap gap-6 text-sm">
+            <span style={{ color: "var(--qs-text-muted)" }}>✓ Easy to use</span>
             <span style={{ color: "var(--qs-text-muted)" }}>
-              ✓ No-code editing
+              ✓ Fast results
             </span>
             <span style={{ color: "var(--qs-text-muted)" }}>
-              ✓ Mobile responsive
-            </span>
-            <span style={{ color: "var(--qs-text-muted)" }}>
-              ✓ Fast to publish
+              ✓ Great support
             </span>
           </div>
         </div>
 
         <div className="relative">
-          <div
-            className="rounded-3xl p-4 shadow-xl"
-            style={{
-              background: "var(--qs-bg-alt)",
-              border: "1px solid var(--qs-border)",
+          <TemplateImage
+            source={content.hero.image1}
+            publicId={content?.hero?.image1PId}
+            isEditor={isEditor}
+            onImageChange={(url, publicId) => {
+              onUpdate("hero", {
+                ...content.hero,
+                image1: url,
+                image1PId: publicId,
+              });
             }}
-          >
-            <div
-              className="overflow-hidden rounded-2xl border"
-              style={{ borderColor: "var(--qs-border)" }}
-            >
-              <div className="flex items-center gap-2 border-b px-4 py-3">
-                <span className="h-3 w-3 rounded-full bg-red-400" />
-                <span className="h-3 w-3 rounded-full bg-yellow-400" />
-                <span className="h-3 w-3 rounded-full bg-green-400" />
-              </div>
-
-              <div className="grid gap-4 p-6">
-                <div className="h-40 rounded-2xl bg-gradient-to-br from-black/10 to-black/5 p-5">
-                  <div className="h-3 w-24 rounded-full bg-black/20" />
-                  <div className="mt-4 h-8 w-3/4 rounded-xl bg-black/20" />
-                  <div className="mt-3 h-3 w-full rounded-full bg-black/15" />
-                  <div className="mt-2 h-3 w-5/6 rounded-full bg-black/15" />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="rounded-2xl border p-4">
-                    <div className="mb-2 h-3 w-16 rounded-full bg-black/15" />
-                    <div className="h-7 w-12 rounded-full bg-black/20" />
-                  </div>
-                  <div className="rounded-2xl border p-4">
-                    <div className="mb-2 h-3 w-16 rounded-full bg-black/15" />
-                    <div className="h-7 w-12 rounded-full bg-black/20" />
-                  </div>
-                  <div className="rounded-2xl border p-4">
-                    <div className="mb-2 h-3 w-16 rounded-full bg-black/15" />
-                    <div className="h-7 w-12 rounded-full bg-black/20" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          />
         </div>
       </div>
     </section>
   );
 }
-function TrustedBy({ content }: TemplateComponentProps) {
+
+function TrustedBy({ isEditor, content, onUpdate }: TemplateComponentProps) {
   const logos = content?.trustedBy ?? [
-    "North Star",
-    "Bright Co",
-    "Studio 9",
-    "LaunchPad",
-    "Mosaic",
+    "TechCorp",
+    "StartupHub",
+    "Creative Co",
+    "Innovation Labs",
+    "Digital Agency",
   ];
 
   return (
@@ -230,8 +226,13 @@ function TrustedBy({ content }: TemplateComponentProps) {
       <p
         className="mb-5 text-center text-sm font-medium uppercase tracking-[0.2em]"
         style={{ color: "var(--qs-text-muted)" }}
+        contentEditable={isEditor}
+        suppressContentEditableWarning
+        onBlur={(e) =>
+          onUpdate("trustedByLabel", e.currentTarget.textContent?.trim())
+        }
       >
-        {content?.trustedByLabel ?? "Trusted by growing brands"}
+        {content?.trustedByLabel ?? "Trusted by"}
       </p>
 
       <div
@@ -249,6 +250,13 @@ function TrustedBy({ content }: TemplateComponentProps) {
               background: "var(--qs-bg)",
               border: "1px solid var(--qs-border)",
             }}
+            contentEditable={isEditor}
+            suppressContentEditableWarning
+            onBlur={(e) => {
+              const newLogos = [...logos];
+              newLogos[i] = e.currentTarget.textContent?.trim() || logo;
+              onUpdate("trustedBy", newLogos);
+            }}
           >
             {logo}
           </div>
@@ -257,19 +265,20 @@ function TrustedBy({ content }: TemplateComponentProps) {
     </section>
   );
 }
+
 function Features({ isEditor, content, onUpdate }: TemplateComponentProps) {
   const features = content?.features ?? [
     {
-      title: "Fast setup",
-      desc: "Publish a professional landing page quickly with ready-made sections.",
+      title: "Quality Service",
+      desc: "We deliver exceptional quality in everything we do, ensuring your complete satisfaction.",
     },
     {
-      title: "Easy editing",
-      desc: "Change text directly in the page while keeping the structure clean.",
+      title: "Fast Delivery",
+      desc: "Get results quickly without compromising on quality or attention to detail.",
     },
     {
-      title: "Responsive layout",
-      desc: "Looks great on phones, tablets, and desktops without extra work.",
+      title: "Expert Support",
+      desc: "Our team of experts is here to help you succeed every step of the way.",
     },
   ];
 
@@ -284,11 +293,19 @@ function Features({ isEditor, content, onUpdate }: TemplateComponentProps) {
             onUpdate("featuresHeading", e.currentTarget.textContent?.trim())
           }
         >
-          {content?.featuresHeading ?? "Everything you need in one template"}
+          {content?.featuresHeading ?? "Why Choose Us"}
         </h3>
-        <p className="mt-4 text-base" style={{ color: "var(--qs-text-muted)" }}>
+        <p
+          className="mt-4 text-base"
+          style={{ color: "var(--qs-text-muted)" }}
+          contentEditable={isEditor}
+          suppressContentEditableWarning
+          onBlur={(e) =>
+            onUpdate("featuresSubheading", e.currentTarget.textContent?.trim())
+          }
+        >
           {content?.featuresSubheading ??
-            "A standard landing page layout that works for product launches, agencies, services, and personal brands."}
+            "Discover what makes us different and how we can help you achieve your goals."}
         </p>
       </div>
 
@@ -303,13 +320,13 @@ function Features({ isEditor, content, onUpdate }: TemplateComponentProps) {
             }}
           >
             <div
-              className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl"
+              className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl text-xl"
               style={{
                 background: "var(--qs-primary)",
                 color: "var(--qs-primary-fg)",
               }}
             >
-              {i + 1}
+              {["⚡", "🎯", "💎"][i]}
             </div>
 
             <h4
@@ -346,11 +363,12 @@ function Features({ isEditor, content, onUpdate }: TemplateComponentProps) {
     </section>
   );
 }
-function Stats({ content }: TemplateComponentProps) {
+
+function Stats({ isEditor, content, onUpdate }: TemplateComponentProps) {
   const stats = content?.stats ?? [
-    { value: "10x", label: "faster launch" },
-    { value: "99%", label: "mobile-ready" },
-    { value: "24/7", label: "always online" },
+    { value: "500+", label: "Happy Customers" },
+    { value: "98%", label: "Satisfaction Rate" },
+    { value: "24/7", label: "Support Available" },
   ];
 
   return (
@@ -364,10 +382,30 @@ function Stats({ content }: TemplateComponentProps) {
       >
         {stats.map((stat: any, i: number) => (
           <div key={i} className="text-center">
-            <div className="text-3xl font-bold md:text-4xl">{stat.value}</div>
+            <div
+              className="text-3xl font-bold md:text-4xl"
+              contentEditable={isEditor}
+              suppressContentEditableWarning
+              onBlur={(e) => {
+                const newStats = [...stats];
+                newStats[i].value =
+                  e.currentTarget.textContent?.trim() || stat.value;
+                onUpdate("stats", newStats);
+              }}
+            >
+              {stat.value}
+            </div>
             <div
               className="mt-1 text-sm"
               style={{ color: "var(--qs-text-muted)" }}
+              contentEditable={isEditor}
+              suppressContentEditableWarning
+              onBlur={(e) => {
+                const newStats = [...stats];
+                newStats[i].label =
+                  e.currentTarget.textContent?.trim() || stat.label;
+                onUpdate("stats", newStats);
+              }}
             >
               {stat.label}
             </div>
@@ -377,27 +415,35 @@ function Stats({ content }: TemplateComponentProps) {
     </section>
   );
 }
-function Testimonials({ content }: TemplateComponentProps) {
+
+function Testimonials({ isEditor, content, onUpdate }: TemplateComponentProps) {
   const testimonials = content?.testimonials ?? [
     {
       quote:
-        "QuickSite made it simple to launch our offer page without needing a designer.",
-      name: "Amina",
-      role: "Founder",
+        "This has completely transformed how we do business. Highly recommend to anyone looking for quality.",
+      name: "Sarah Johnson",
+      role: "CEO, TechStart",
     },
     {
       quote:
-        "The template feels clean, professional, and easy to adapt for different clients.",
-      name: "Daniel",
-      role: "Agency Owner",
+        "Exceptional service and results. The team went above and beyond our expectations.",
+      name: "Michael Chen",
+      role: "Founder, Creative Studio",
     },
   ];
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-16">
       <div className="mx-auto mb-10 max-w-2xl text-center">
-        <h3 className="text-3xl font-bold tracking-tight md:text-4xl">
-          {content?.testimonialsHeading ?? "What people say"}
+        <h3
+          className="text-3xl font-bold tracking-tight md:text-4xl"
+          contentEditable={isEditor}
+          suppressContentEditableWarning
+          onBlur={(e) =>
+            onUpdate("testimonialsHeading", e.currentTarget.textContent?.trim())
+          }
+        >
+          {content?.testimonialsHeading ?? "What Our Clients Say"}
         </h3>
       </div>
 
@@ -411,12 +457,44 @@ function Testimonials({ content }: TemplateComponentProps) {
               border: "1px solid var(--qs-border)",
             }}
           >
-            <p className="text-lg leading-8">“{item.quote}”</p>
+            <p
+              className="text-lg leading-8"
+              contentEditable={isEditor}
+              suppressContentEditableWarning
+              onBlur={(e) =>
+                onUpdate(
+                  `testimonials.${i}.quote`,
+                  e.currentTarget.textContent?.trim(),
+                )
+              }
+            >
+              &quot;{item.quote}&quot;
+            </p>
             <footer className="mt-5">
-              <div className="font-semibold">{item.name}</div>
+              <div
+                className="font-semibold"
+                contentEditable={isEditor}
+                suppressContentEditableWarning
+                onBlur={(e) =>
+                  onUpdate(
+                    `testimonials.${i}.name`,
+                    e.currentTarget.textContent?.trim(),
+                  )
+                }
+              >
+                {item.name}
+              </div>
               <div
                 className="text-sm"
                 style={{ color: "var(--qs-text-muted)" }}
+                contentEditable={isEditor}
+                suppressContentEditableWarning
+                onBlur={(e) =>
+                  onUpdate(
+                    `testimonials.${i}.role`,
+                    e.currentTarget.textContent?.trim(),
+                  )
+                }
               >
                 {item.role}
               </div>
@@ -427,11 +505,12 @@ function Testimonials({ content }: TemplateComponentProps) {
     </section>
   );
 }
+
 function Cta({ isEditor, content, onUpdate }: TemplateComponentProps) {
   return (
     <section className="mx-auto max-w-6xl px-6 py-20">
       <div
-        className="rounded-[2rem] px-6 py-12 text-center md:px-10"
+        className="rounded-4xl px-6 py-12 text-center md:px-10"
         style={{
           background: "var(--qs-primary)",
           color: "var(--qs-primary-fg)",
@@ -445,7 +524,7 @@ function Cta({ isEditor, content, onUpdate }: TemplateComponentProps) {
             onUpdate("cta.title", e.currentTarget.textContent?.trim())
           }
         >
-          {content?.cta?.title ?? "Ready to build your next page?"}
+          {content?.cta?.title ?? "Ready to Get Started?"}
         </h3>
 
         <p
@@ -458,19 +537,25 @@ function Cta({ isEditor, content, onUpdate }: TemplateComponentProps) {
           }
         >
           {content?.cta?.desc ??
-            "Use this template as a polished starting point for your product, service, or business landing page."}
+            "Join thousands of satisfied customers and start your journey with us today."}
         </p>
 
         <div className="mt-8 flex justify-center gap-4">
-          <button className="rounded-xl bg-white px-6 py-3 font-semibold text-black transition-transform hover:scale-[1.02]">
-            {content?.cta?.button ?? "Get Started"}
-          </button>
+          <CtaLink
+            isEditor={isEditor}
+            label={content?.cta?.button ?? "Get Started Now"}
+            linkConfig={content?.cta?.buttonLink}
+            onLabelChange={(v) => onUpdate("cta.button", v)}
+            onLinkChange={(cfg) => onUpdate("cta.buttonLink", cfg)}
+            className="rounded-xl bg-white px-6 py-3 font-semibold text-black transition-transform hover:scale-[1.02] inline-block"
+          />
         </div>
       </div>
     </section>
   );
 }
-function Footer({ content }: TemplateComponentProps) {
+
+function Footer({ isEditor, content, onUpdate }: TemplateComponentProps) {
   return (
     <footer
       className="mt-8 border-t"
@@ -481,12 +566,19 @@ function Footer({ content }: TemplateComponentProps) {
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="font-semibold">
-            {content?.footer?.brand ?? "QuickSite"}
+          <p
+            className="font-semibold"
+            contentEditable={isEditor}
+            suppressContentEditableWarning
+            onBlur={(e) =>
+              onUpdate("footer.brand", e.currentTarget.textContent?.trim())
+            }
+          >
+            {content?.footer?.brand ?? "My Business"}
           </p>
           <p className="mt-1 text-sm" style={{ color: "var(--qs-text-muted)" }}>
             {content?.footer?.copyright ??
-              `© ${new Date().getFullYear()} QuickSite. All rights reserved.`}
+              `© ${new Date().getFullYear()} My Business. All rights reserved.`}
           </p>
         </div>
 
@@ -505,83 +597,121 @@ function Footer({ content }: TemplateComponentProps) {
     </footer>
   );
 }
+
 export const template1StarterContent = ({
-  selectedTitle = undefined,
+  selectedTitle,
+  whatsappNumber,
+  defaultMessage,
 }: {
-  selectedTitle: string | undefined;
+  selectedTitle: string;
+  whatsappNumber: number;
+  defaultMessage: string;
 }) => {
   return {
     navbar: {
-      title: selectedTitle || "Your Brand",
-      links: ["Home", "Features", "About", "Contact"],
+      logo: "🚀",
+      title: selectedTitle,
+      links: ["Features", "About", "Pricing", "Contact"],
     },
 
     hero: {
-      badge: "Build something amazing",
-      title: "A simple way to create a powerful landing page",
-      desc: "Easily build a modern, responsive landing page for your business, product, or personal brand. No complex setup required.",
+      badge: "✨ New & Improved",
+      image1:
+        "https://res.cloudinary.com/dbfkzc5an/image/upload/v1777214672/image_wy9bs5.png",
+      image1PId: "",
+      title: "Transform Your Business With Our Solution",
+      desc: "We help businesses grow faster with innovative solutions designed to simplify your workflow and maximize results.",
       primaryButton: "Get Started",
+      primaryButtonLink: {
+        type: "whatsapp",
+        phone: whatsappNumber,
+        message: defaultMessage,
+      },
       secondaryButton: "Learn More",
+      secondaryButtonLink: {
+        type: "whatsapp",
+        phone: whatsappNumber,
+        message: defaultMessage,
+      },
     },
 
-    trustedByLabel: "Trusted by people building great things",
-    trustedBy: ["Company A", "Studio B", "Startup C", "Brand D", "Agency E"],
+    trustedByLabel: "Trusted by",
+    trustedBy: [
+      "TechCorp",
+      "StartupHub",
+      "Creative Co",
+      "Innovation Labs",
+      "Digital Agency",
+    ],
 
-    featuresHeading: "Everything you need",
+    featuresHeading: "Why Choose Us",
     featuresSubheading:
-      "A clean, flexible layout designed to fit any type of project or business.",
+      "Discover what makes us different and how we can help you achieve your goals.",
 
     features: [
       {
-        title: "Simple setup",
-        desc: "Start quickly with a ready-made structure that just works.",
+        title: "Quality Service",
+        desc: "We deliver exceptional quality in everything we do, ensuring your complete satisfaction.",
       },
       {
-        title: "Editable content",
-        desc: "Click and edit text directly without breaking the layout.",
+        title: "Fast Delivery",
+        desc: "Get results quickly without compromising on quality or attention to detail.",
       },
       {
-        title: "Responsive design",
-        desc: "Looks great on all devices automatically.",
+        title: "Expert Support",
+        desc: "Our team of experts is here to help you succeed every step of the way.",
       },
     ],
 
     stats: [
-      { value: "Fast", label: "setup time" },
-      { value: "Clean", label: "design system" },
-      { value: "Easy", label: "customisation" },
+      { value: "500+", label: "Happy Customers" },
+      { value: "98%", label: "Satisfaction Rate" },
+      { value: "24/7", label: "Support Available" },
     ],
 
-    testimonialsHeading: "What people are saying",
+    testimonialsHeading: "What Our Clients Say",
     testimonials: [
       {
         quote:
-          "This made it so easy to launch my page without needing a developer.",
-        name: "User One",
-        role: "Founder",
+          "This has completely transformed how we do business. Highly recommend to anyone looking for quality.",
+        name: "Sarah Johnson",
+        role: "CEO, TechStart",
       },
       {
-        quote: "Super clean design and very flexible for different projects.",
-        name: "User Two",
-        role: "Creator",
+        quote:
+          "Exceptional service and results. The team went above and beyond our expectations.",
+        name: "Michael Chen",
+        role: "Founder, Creative Studio",
       },
     ],
 
     cta: {
-      title: "Start building your landing page today",
-      desc: "Turn your idea into a live website in minutes with this simple template.",
-      button: "Get Started",
+      title: "Ready to Get Started?",
+      desc: "Join thousands of satisfied customers and start your journey with us today.",
+      button: "Get Started Now",
+      buttonLink: {
+        type: "whatsapp",
+        phone: whatsappNumber,
+        message: defaultMessage,
+      },
     },
 
     footer: {
-      brand: "Your Brand",
-      copyright: `© ${new Date().getFullYear()} Your Brand. All rights reserved.`,
+      brand: "My Business",
+      copyright: `© ${new Date().getFullYear()} My Business. All rights reserved.`,
     },
   };
 };
+
 export const template1Meta = {
-  title: "Modern Landing Page",
+  title: "Business Landing Page",
   category: "Landing Page",
   description:
-    "A high-converting landing page template with structured sections, responsive design, and easy content editing.",
+    "A versatile landing page template perfect for businesses, products, services, or personal brands. Clean, professional, and fully customizable.",
 };
+
+export const template1Config: TemplateConfig = {
+  theme: "light",
+  
+};
+export 

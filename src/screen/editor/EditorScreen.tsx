@@ -13,7 +13,7 @@ interface EditorScreenProps {
 
 export default function EditorScreen({ data, onChange }: EditorScreenProps) {
   const templateEntry = templatesRegistry[data.type];
-  const theme = themeRegistry["tech"];
+  const theme = themeRegistry[data.theme];
 
   if (!templateEntry) {
     return (

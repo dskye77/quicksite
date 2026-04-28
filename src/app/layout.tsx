@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
@@ -16,8 +17,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_STANDARD_NAME = process.env.NEXT_PUBLIC_SITE_STANDARD_NAME;
+
 export const metadata: Metadata = {
-  title: "MakeSite — Your business online in minutes",
+  title: `${SITE_STANDARD_NAME} — Your business online in minutes`,
   description:
     "Build a professional website for your Nigerian business in minutes. No coding needed.",
   keywords: ["website builder", "Nigeria", "small business", "online store"],

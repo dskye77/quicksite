@@ -2,11 +2,12 @@
 
 import { useEffect, useState, use } from "react";
 import { getSiteBySlug, updateSiteBySlug } from "@/lib/firestore";
-import EditorScreen from "@/features/editor/EditorScreen";
+import EditorScreen from "@/screen/editor/EditorScreen";
 import { toast } from "sonner";
 import { Loader2, Save, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { Site } from "@/lib/types";
+import { getAllThemes, themeRegistry } from "@/lib/themes";
 
 interface PageProps {
   params: Promise<{
@@ -52,13 +53,7 @@ export default function SiteEditorPage({ params }: PageProps) {
 
     setIsSaving(true);
     try {
-      await updateSiteBySlug(siteSlug, {
-        name: siteData.name,
-        slug: siteData.slug,
-        type: siteData.type,
-        status: siteData.status,
-        content: siteData.content,
-      });
+      await updateSiteBySlug(siteSlug, siteData);
       toast.success("All changes saved!");
     } catch (error) {
       console.error("Save Error:", error);
@@ -94,28 +89,42 @@ export default function SiteEditorPage({ params }: PageProps) {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Editor Toolbar */}
-      <header className="h-16 border-b bg-white flex items-center justify-between px-6 shrink-0 z-50 shadow-sm">
+      <header className="h-16 border-b bg-background flex items-center justify-between px-6 shrink-0 z-50 shadow-sm">
         <div className="flex items-center gap-4">
           <Link
             href="/dashboard/sites"
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+            className="p-2  rounded-full transition-colors"
           >
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="font-bold text-slate-900 leading-none">
+            <h1 className="font-bold text-foreground leading-none">
               {siteData.name || "Untitled Site"}
             </h1>
-            <p className="text-[10px] text-slate-400 font-mono mt-1 uppercase tracking-wider">
-              Mode: Editing {siteData.id}
+            <p className="text-[10px] text-foreground/60 font-mono mt-1 uppercase tracking-wider">
+              Mode: Editing
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-400 italic hidden sm:block">
-            Auto-save is disabled
+            Theme
           </span>
+          <select
+            className="border border-black rounded-full px-3 py-1 text-xs text-black bg-white/80 focus:ring-2 focus:ring-primary outline-none transition-all"
+            value={siteData.theme}
+            onChange={(e) => {
+              setSiteData({ ...siteData, theme: e.target.value });
+            }}
+            disabled={isSaving}
+          >
+            {getAllThemes().map(({ id }) => (
+              <option key={id} value={id}>
+                {id}
+              </option>
+            ))}
+          </select>
           <button
             onClick={handleSave}
             disabled={isSaving}
