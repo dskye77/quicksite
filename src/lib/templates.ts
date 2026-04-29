@@ -2,17 +2,21 @@
 // @/assets/siteTemplates/templatesRegistry.tsx
 
 import { template1 } from "@/components/siteTemplates/template_1/index";
+import { template2 } from "@/components/siteTemplates/template_2/index";
 
 /* -------------- TEMPLATES TYPES ---------------- */
 export interface TemplateProps {
   isEditor: boolean;
   content: AnyObject;
   onUpdate?: (path: string, value: any) => void;
+  slugs?: Record<string, string>;
 }
+
 export interface TemplateComponentProps {
   isEditor: boolean;
   content: AnyObject;
   onUpdate: (path: string, value: any) => void;
+  slugs?: Record<string, string>;
 }
 /* ---------------- TYPES ---------------- */
 
@@ -20,9 +24,9 @@ type AnyObject = Record<string, any>;
 
 /* ---------------- REGISTRY ---------------- */
 
-export const templatesRegistry = [template1];
+export const templatesRegistry = [template1, template2];
 
-export const templatesCategories = ["Landing Page"];
+export const templatesCategories = ["Landing Page", "Portfolio"];
 
 export const getTemplateByType = (type: string) =>
   templatesRegistry.find((t) => t.type === type);

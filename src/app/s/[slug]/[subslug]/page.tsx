@@ -1,7 +1,7 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import { trackSiteEvent } from "@/lib/firestore";
+import { useParams } from "next/navigation";
 import { useSiteDisplayStore } from "@/store/useSiteDisplayStore";
 
 import SiteRenderer from "@/screen/s/SiteRenderer";
@@ -12,9 +12,9 @@ export default function PublicSitePage() {
   const slug = params.slug as string;
   const subslug = params.subslug as string;
   const slugs = {
-    slug,
-    subslug,
-  };
+    slug, subslug
+  }
+  
 
   const siteData = useSiteDisplayStore((s) => s.site);
   const loading = useSiteDisplayStore((s) => s.loading);

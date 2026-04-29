@@ -75,12 +75,9 @@ const FAQ = [
   },
   {
     q: "How does payment work?",
-    a: "We accept bank transfers, Paystack, and Flutterwave. All amounts are in Naira (₦).",
+    a: "We accept bank transfers, Paystack. All amounts are in Naira (₦).",
   },
-  {
-    q: "Can I use my own domain?",
-    a: "Yes — custom domain connection is available on the Basic plan and above.",
-  },
+
 ];
 
 export default function PricingScreen() {

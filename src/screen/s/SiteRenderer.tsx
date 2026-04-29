@@ -3,7 +3,13 @@ import { getTheme } from "@/lib/themes";
 
 import type { Site } from "@/lib/types";
 
-export default function SiteRenderer({ site }: { site: Site }) {
+export default function SiteRenderer({
+  site,
+  slugs,
+}: {
+  site: Site;
+  slugs?: Record<string, string>;
+}) {
   // Validate template exists
   const templateEntry = getTemplateByType(site.type);
   if (!templateEntry?.template) {
@@ -41,7 +47,11 @@ export default function SiteRenderer({ site }: { site: Site }) {
   return (
     <div className={`w-full h-full ${theme.className || ""}`}>
       {theme.css && <style>{theme.css}</style>}
-      <Template isEditor={false} content={site.content || {}} />
+      <Template
+        isEditor={false}
+        content={site.content || {}}
+        slugs={slugs}
+      />
     </div>
   );
 }

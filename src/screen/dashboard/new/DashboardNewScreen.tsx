@@ -225,73 +225,49 @@ export default function CreateSitePage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return toast.error("Please login first");
-
+  
+    const normalizedName = formData.name.trim();
+    const normalizedSlug = formData.slug.trim();
+  
+    // Validate inputs before any Firestore calls
+    if (!normalizedName || !normalizedSlug) {
+      return toast.error("Please add both site name and URL slug.");
+    }
+    if (!templateEntry) {
+      return toast.error("Please select a valid template");
+    }
+  
     setLoading(true);
     try {
-      // Check site limit first
-      const currentCount = await getUserSitesCount(user.uid); // import this
-      const limit = await getUserSiteLimit(user.uid); // import this
-
-      if (currentCount >= limit) {
-        setLoading(false);
-        return toast.error(
-          `You can only create ${limit} sites on the free plan.`,
-        );
-      }
-      const normalizedName = formData.name.trim();
-      const normalizedSlug = formData.slug.trim();
-
-      // 1. Validate Slug
       const taken = await isSlugTaken(normalizedSlug);
       if (taken) {
-        setLoading(false);
         return toast.error("This URL is already taken.");
       }
-
-      if (!normalizedName || !normalizedSlug) {
-        setLoading(false);
-        return toast.error("Please add both site name and URL slug.");
-      }
-
-      if (!templateEntry) {
-        setLoading(false);
-        return toast.error("Please select a valid template");
-      }
-
-      // 2. Create starter content that will be saved to Firebase
+  
       const content = templateEntry.starterContent({
         selectedTitle: normalizedName,
         defaultMessage,
         whatsappNumber,
       });
-
-      const theme = templateEntry.config.theme;
-
-      // 3. Construct the final object
-
+  
+      // ✅ Remove createdAt/updatedAt/visits/whatsappClicks — createSite sets these
       const sitePayload = {
         slug: normalizedSlug,
         type: formData.type,
         name: normalizedName,
-        theme,
-        status: "draft",
-        visits: 0,
-        whatsappClicks: 0,
-        createdAt: null,
-        updatedAt: null,
+        theme: templateEntry.config.theme,
+        status: "draft" as const,
         content,
       };
-
-      // 4. Save to Firebase
+  
       await createSite(user.uid, sitePayload);
-
       toast.success("Site initialized!");
-
-      // 5. Route to Editor
       router.push(`/editor/${normalizedSlug}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Failed to create site.");
+      // Show the actual Firebase error message to help debug
+      toast.error(error?.message ?? "Failed to create site.");
+    } finally {
       setLoading(false);
     }
   };

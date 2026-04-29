@@ -9,9 +9,14 @@ import { getTheme } from "@/lib/themes";
 interface EditorScreenProps {
   data: Site;
   onChange: (updated: Site) => void;
+  slugs?: Record<string, string>;
 }
 
-export default function EditorScreen({ data, onChange }: EditorScreenProps) {
+export default function EditorScreen({
+  data,
+  onChange,
+  slugs,
+}: EditorScreenProps) {
   const templateEntry = getTemplateByType(data.type);
   const theme = getTheme(data.theme);
 
@@ -38,6 +43,7 @@ export default function EditorScreen({ data, onChange }: EditorScreenProps) {
         isEditor={true}
         content={data.content}
         onUpdate={handleUpdate}
+        slugs={slugs}
       />
     </div>
   );

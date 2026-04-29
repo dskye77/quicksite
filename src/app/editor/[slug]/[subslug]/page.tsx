@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
+
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { Loader2, Save, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,7 +13,7 @@ import { useSiteEditorStore } from "@/store/useSiteEditorStore";
 
 import EditorScreen from "@/screen/editor/EditorScreen";
 
-export default function SiteEditorPage() {
+export default function SiteEditorSubPage() {
   const { user } = useAuth();
 
   const params = useParams();
@@ -22,6 +24,7 @@ export default function SiteEditorPage() {
     slug,
     subslug,
   };
+  const router = useRouter();
 
   const siteData = useSiteEditorStore((s) => s.site);
   const loading = useSiteEditorStore((s) => s.loading);
@@ -41,7 +44,11 @@ export default function SiteEditorPage() {
       toast.error("Could not save changes.");
     }
   };
-
+  //   useEffect(() => {
+  //     if (!subslug && slug) {
+  //       router.replace("/editor/" + slug);
+  //     }
+  //   }, [subslug, slug, router]);
   // ── Loading State ──────────────────────────────────────────────────
   if (loading) {
     return (
@@ -127,7 +134,7 @@ export default function SiteEditorPage() {
         <div className="max-w-300 mx-auto min-h-full">
           <EditorScreen
             data={siteData}
-            onChange={(updated) => updateSite(updated)} 
+            onChange={(updated) => updateSite(updated)} // 🔥 key change
             slugs={slugs}
           />
         </div>
