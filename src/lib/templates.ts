@@ -3,6 +3,7 @@
 
 import { template1 } from "@/components/siteTemplates/template_1/index";
 import { template2 } from "@/components/siteTemplates/template_2/index";
+import { template3 } from "@/components/siteTemplates/landing-page-2";
 
 /* -------------- TEMPLATES TYPES ---------------- */
 export interface TemplateProps {
@@ -26,7 +27,13 @@ type AnyObject = Record<string, any>;
 
 export const templatesRegistry = [template1, template2];
 
-export const templatesCategories = ["Landing Page", "Portfolio"];
+export const templatesCategories = Array.from(
+  new Set(
+    templatesRegistry
+      .map((t: any) => t.category)
+      .filter((category) => !!category)
+  )
+);
 
 export const getTemplateByType = (type: string) =>
   templatesRegistry.find((t) => t.type === type);

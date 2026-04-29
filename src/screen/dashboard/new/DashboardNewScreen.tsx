@@ -3,13 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  getUserSitesCount,
-  getUserSiteLimit,
-  createSite,
-  isSlugTaken,
-} from "@/lib/firestore";
+import { createSite, isSlugTaken } from "@/lib/firestore";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserStore } from "@/store/useUserStore";
 import { useDashboardStore } from "@/store/useDashboardStore";
 import {
   getTemplateByType,
@@ -194,7 +190,7 @@ export default function CreateSitePage() {
   const paramsSlug = searchParams.get("slug");
 
   // get profile data
-  const userProfile = useDashboardStore().profile;
+  const userProfile = useUserStore().profile;
   const defaultMessage = userProfile?.defaultMessage;
   const whatsappNumber = userProfile?.whatsappNumber;
 
@@ -225,10 +221,10 @@ export default function CreateSitePage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return toast.error("Please login first");
-  
+
     const normalizedName = formData.name.trim();
     const normalizedSlug = formData.slug.trim();
-  
+
     // Validate inputs before any Firestore calls
     if (!normalizedName || !normalizedSlug) {
       return toast.error("Please add both site name and URL slug.");
@@ -236,21 +232,20 @@ export default function CreateSitePage() {
     if (!templateEntry) {
       return toast.error("Please select a valid template");
     }
-  
+
     setLoading(true);
     try {
       const taken = await isSlugTaken(normalizedSlug);
       if (taken) {
         return toast.error("This URL is already taken.");
       }
-  
+
       const content = templateEntry.starterContent({
         selectedTitle: normalizedName,
         defaultMessage,
         whatsappNumber,
       });
-  
-      // ✅ Remove createdAt/updatedAt/visits/whatsappClicks — createSite sets these
+
       const sitePayload = {
         slug: normalizedSlug,
         type: formData.type,
@@ -259,7 +254,7 @@ export default function CreateSitePage() {
         status: "draft" as const,
         content,
       };
-  
+
       await createSite(user.uid, sitePayload);
       toast.success("Site initialized!");
       router.push(`/editor/${normalizedSlug}`);

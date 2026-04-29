@@ -1,24 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/store/useDashboardStore.ts
 // ─────────────────────────────────────────────────────────────
-// Zustand dashboard store (Fully Integrated with Initialize)
+// Zustand dashboard store (Profile-free version)
 // ─────────────────────────────────────────────────────────────
 
 import { create } from "zustand";
 import {
   getUserSites,
-  getUserProfile,
   createSite,
   updateSite,
   deleteSite,
-  createOrUpdateUserProfile,
-  updateUserProfile,
-  uploadProfilePhoto,
   getUserSiteLimit,
 } from "@/lib/firestore";
 
-import type { Site, UserProfile, DashboardStats } from "@/lib/types";
-import { useId } from "react";
+import type { Site, DashboardStats } from "@/lib/types";
 
 // ─────────────────────────────────────────────────────────────
 // UI STATE
@@ -36,27 +31,18 @@ interface UIState {
 
 interface DashboardState {
   sites: Site[];
-  profile: UserProfile | null;
-
   siteLimit: number;
 
   stats: DashboardStats;
 
   sitesLoading: boolean;
-  profileLoading: boolean;
   sitesError: string | null;
-  profileError: string | null;
 
   ui: UIState;
 
   // ── data actions
-  /** * Orchestrates the initial data load for the dashboard.
-   * Useful for client-side mounting or forced refreshes.
-   */
   initialize: (uid: string) => Promise<void>;
-
   fetchSites: (uid: string) => Promise<void>;
-  fetchProfile: (uid: string) => Promise<void>;
 
   addSite: (
     uid: string,
@@ -79,13 +65,6 @@ interface DashboardState {
     current: Site["status"],
     uid: string,
   ) => Promise<void>;
-
-  saveProfile: (
-    uid: string,
-    data: Partial<Omit<UserProfile, "uid" | "createdAt">>,
-  ) => Promise<void>;
-
-  changeProfilePhoto: (uid: string, file: File) => Promise<void>;
 
   // ── UI actions
   setCreateModal: (open: boolean) => void;
@@ -150,13 +129,10 @@ const initialUI: UIState = {
 
 export const useDashboardStore = create<DashboardState>((set, get) => ({
   sites: [],
-  profile: null,
   siteLimit: 0,
   stats: initialStats,
   sitesLoading: false,
-  profileLoading: false,
   sitesError: null,
-  profileError: null,
   ui: initialUI,
 
   // ─────────────────────────────────────────────────────────
@@ -164,21 +140,15 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   // ─────────────────────────────────────────────────────────
 
   initialize: async (uid: string) => {
-    // Start both loading indicators
     set({
       sitesLoading: true,
-      profileLoading: true,
       sitesError: null,
-      profileError: null,
     });
 
-    // Run fetches concurrently for performance
-    // We use Settled to ensure one failing doesn't block the other
-    await Promise.allSettled([get().fetchSites(uid), get().fetchProfile(uid)]);
+    await get().fetchSites(uid);
 
     set({
       sitesLoading: false,
-      profileLoading: false,
     });
   },
 
@@ -205,24 +175,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       set({
         sitesError: (e as Error).message,
         sitesLoading: false,
-      });
-    }
-  },
-
-  // ─────────────────────────────────────────────────────────
-  // FETCH PROFILE
-  // ─────────────────────────────────────────────────────────
-
-  fetchProfile: async (uid) => {
-    set({ profileLoading: true, profileError: null });
-
-    try {
-      const profile = await getUserProfile(uid);
-      set({ profile, profileLoading: false });
-    } catch (e) {
-      set({
-        profileError: (e as Error).message,
-        profileLoading: false,
       });
     }
   },
@@ -318,30 +270,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   },
 
   // ─────────────────────────────────────────────────────────
-  // PROFILE
-  // ─────────────────────────────────────────────────────────
-
-  saveProfile: async (uid, data) => {
-    await createOrUpdateUserProfile(uid, data);
-
-    set((state) => ({
-      profile: state.profile ? { ...state.profile, ...data } : state.profile,
-    }));
-  },
-
-  changeProfilePhoto: async (uid, file) => {
-    const url = await uploadProfilePhoto(uid, file);
-
-    await updateUserProfile(uid, { photoURL: url });
-
-    set((state) => ({
-      profile: state.profile
-        ? { ...state.profile, photoURL: url }
-        : state.profile,
-    }));
-  },
-
-  // ─────────────────────────────────────────────────────────
   // UI ACTIONS
   // ─────────────────────────────────────────────────────────
 
@@ -367,13 +295,10 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   reset: () =>
     set({
       sites: [],
-      profile: null,
       siteLimit: 0,
       stats: initialStats,
       sitesLoading: false,
-      profileLoading: false,
       sitesError: null,
-      profileError: null,
       ui: initialUI,
     }),
 }));

@@ -2,9 +2,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useDashboardStore } from "@/store/useDashboardStore";
+import { useUserStore } from "@/store/useUserStore";
 import {
   User,
   Lock,
@@ -12,7 +12,6 @@ import {
   Globe,
   ShieldCheck,
   Save,
-  Camera,
   Loader2,
   CheckCircle2,
 } from "lucide-react";
@@ -56,18 +55,12 @@ function ProfileTab({
   displayName,
   setDisplayName,
   user,
-  photoInputRef,
-  photoUploading,
-  handlePhotoChange,
 }: {
   photoURL?: string | null;
   initials: string;
   displayName: string;
   setDisplayName: (n: string) => void;
   user: any | null | undefined;
-  photoInputRef: any | null | undefined;
-  photoUploading: boolean;
-  handlePhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
     <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
@@ -85,24 +78,6 @@ function ProfileTab({
               <span className="text-xl font-bold text-primary">{initials}</span>
             )}
           </div>
-          <button
-            onClick={() => photoInputRef.current?.click()}
-            disabled={photoUploading}
-            className="absolute bottom-0 right-0 p-1.5 bg-primary text-white rounded-full shadow-lg hover:scale-110 transition cursor-pointer disabled:opacity-60"
-          >
-            {photoUploading ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Camera className="h-3 w-3" />
-            )}
-          </button>
-          <input
-            ref={photoInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handlePhotoChange}
-          />
         </div>
         <div>
           <h3 className="font-bold">Profile Picture</h3>
@@ -310,13 +285,12 @@ function FooterActions({
 // Main Dashboard Settings component
 export default function DashboardSettings() {
   const { user, sendReset } = useAuth();
-  const { profile, saveProfile, changeProfilePhoto, profileLoading } =
-    useDashboardStore();
+  const { profile, updateProfile, isLoading } = useUserStore();
   const [activeTab, setActiveTab] = useState<Tab>("profile");
 
   // Profile fields
   const [displayName, setDisplayName] = useState(
-    profile?.displayName ?? user?.displayName ?? "",
+    profile?.displayName ?? profile?.displayName ?? "",
   );
   const [whatsappNumber, setWhatsappNumber] = useState(
     profile?.whatsappNumber ?? "",
@@ -332,12 +306,9 @@ export default function DashboardSettings() {
   // UI state
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [photoUploading, setPhotoUploading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = async () => {
     if (!user) return;
@@ -350,24 +321,13 @@ export default function DashboardSettings() {
         updates.defaultAuthor = defaultAuthor;
         updates.defaultMessage = defaultMessage;
       }
-      await saveProfile(user.uid, updates);
+      await updateProfile(user.uid, updates);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    setPhotoUploading(true);
-    try {
-      await changeProfilePhoto(user.uid, file);
-    } finally {
-      setPhotoUploading(false);
     }
   };
 
@@ -384,7 +344,7 @@ export default function DashboardSettings() {
 
   const photoURL = profile?.photoURL || user?.photoURL;
   const initials = (
-    profile?.displayName ||
+    user?.displayName ||
     user?.displayName ||
     user?.email ||
     "ME"
@@ -436,9 +396,6 @@ export default function DashboardSettings() {
               displayName={displayName}
               setDisplayName={setDisplayName}
               user={user}
-              photoInputRef={photoInputRef}
-              photoUploading={photoUploading}
-              handlePhotoChange={handlePhotoChange}
             />
           )}
 
@@ -467,7 +424,7 @@ export default function DashboardSettings() {
               error={error}
               saved={saved}
               saving={saving}
-              profileLoading={profileLoading}
+              profileLoading={isLoading}
               handleSave={handleSave}
             />
           )}

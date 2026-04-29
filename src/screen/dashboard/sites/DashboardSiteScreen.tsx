@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { useDashboardStore } from "@/store/useDashboardStore";
+import { useUserStore } from "@/store/useUserStore";
 import { toast } from "sonner";
 
 import type { Site } from "@/lib/types";
@@ -27,7 +28,8 @@ const DOMAIN_NAME = process.env.NEXT_PUBLIC_DOMAIN_NAME;
 // ── Delete Confirm Modal ──────────────────────────────────────────────────────
 
 function DeleteModal({ site, onClose }: { site: Site; onClose: () => void }) {
-  const { profile, removeSite } = useDashboardStore();
+  const { profile } = useUserStore();
+  const { removeSite } = useDashboardStore();
   const [loading, setLoading] = useState(false);
   const uid = profile?.uid;
 
@@ -92,19 +94,20 @@ function DeleteModal({ site, onClose }: { site: Site; onClose: () => void }) {
 // ── Site Card ─────────────────────────────────────────────────────────────────
 
 function SiteCard({ site }: { site: Site }) {
-  const { profile, toggleSiteStatus, setDeleteConfirm } = useDashboardStore();
+  const { toggleSiteStatus, setDeleteConfirm } = useDashboardStore();
+  const { profile: user } = useUserStore();
   const [toggling, setToggling] = useState(false);
 
   // Handler for publish/unpublish button
   const handleToggle = async () => {
-    if (!profile || !profile.uid) {
+    if (!user || !user.uid) {
       // Do nothing or optionally show a warning
       setToggling(false);
       return;
     }
     setToggling(true);
     try {
-      await toggleSiteStatus(site.id, site.status, profile.uid);
+      await toggleSiteStatus(site.id, site.status, user.uid);
     } finally {
       setToggling(false);
     }
@@ -168,14 +171,14 @@ function SiteCard({ site }: { site: Site }) {
         <div className="flex items-center justify-between gap-3 mt-4">
           <button
             onClick={handleToggle}
-            disabled={toggling || !profile}
+            disabled={toggling || !user}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition disabled:opacity-70 ${
               site.status === "published"
                 ? "bg-orange-500 text-white hover:bg-orange-600"
                 : "bg-emerald-500 text-white hover:bg-emerald-600"
             }`}
             title={
-              !profile
+              !user
                 ? "You must be logged in to publish/unpublish"
                 : site.status === "published"
                   ? "Unpublish Site"
@@ -208,12 +211,12 @@ function SiteCard({ site }: { site: Site }) {
 // ── Main Screen ───────────────────────────────────────────────────────────────
 
 export default function DashboardSiteScreen() {
-  const { sites, sitesLoading, ui, setDeleteConfirm, profile } =
-    useDashboardStore();
+  const { sites, sitesLoading, ui, setDeleteConfirm } = useDashboardStore();
+  const { profile: user } = useUserStore();
   const [searchQuery, setSearchQuery] = useState("");
 
   // If not logged in, show a message and skip site management UI
-  if (!profile) {
+  if (!user) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
         <Globe className="h-10 w-10 text-muted-foreground/20 mb-4" />

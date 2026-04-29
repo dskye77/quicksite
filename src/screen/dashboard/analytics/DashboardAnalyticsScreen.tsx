@@ -21,7 +21,10 @@ export default function DashboardAnalyticsScreen() {
   const { sites, sitesLoading } = useDashboardStore();
   const filteredSites = filterSitesByRange(sites, timeRange);
 
-  const totalVisits = filteredSites.reduce((sum, site) => sum + (site.visits ?? 0), 0);
+  const totalVisits = filteredSites.reduce(
+    (sum, site) => sum + (site.visits ?? 0),
+    0,
+  );
   const totalWhatsappClicks = filteredSites.reduce(
     (sum, site) => sum + (site.whatsappClicks ?? 0),
     0,
@@ -29,11 +32,15 @@ export default function DashboardAnalyticsScreen() {
   const totalImageAssets = filteredSites.reduce((sum, site) => {
     const content = site.content as { items?: Array<{ image?: string }> };
     const imageCount =
-      content.items?.filter((item) => typeof item.image === "string" && item.image).length ?? 0;
+      content.items?.filter(
+        (item) => typeof item.image === "string" && item.image,
+      ).length ?? 0;
     return sum + imageCount;
   }, 0);
   const conversionRate =
-    totalVisits > 0 ? ((totalWhatsappClicks / totalVisits) * 100).toFixed(1) : "0.0";
+    totalVisits > 0
+      ? ((totalWhatsappClicks / totalVisits) * 100).toFixed(1)
+      : "0.0";
   useEffect(() => {
     let active = true;
     async function loadEvents() {
@@ -128,7 +135,11 @@ export default function DashboardAnalyticsScreen() {
 
       {/* ── Stats Grid ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Visits" value={formatNumber(totalVisits)} icon={Users} />
+        <StatCard
+          label="Total Visits"
+          value={formatNumber(totalVisits)}
+          icon={Users}
+        />
         <StatCard
           label="WhatsApp Clicks"
           value={formatNumber(totalWhatsappClicks)}
@@ -139,7 +150,11 @@ export default function DashboardAnalyticsScreen() {
           value={formatNumber(totalImageAssets)}
           icon={ImageIcon}
         />
-        <StatCard label="Conversion Rate" value={`${conversionRate}%`} icon={BarChart2} />
+        <StatCard
+          label="Conversion Rate"
+          value={`${conversionRate}%`}
+          icon={BarChart2}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -166,7 +181,10 @@ export default function DashboardAnalyticsScreen() {
           ) : (
             <div className="w-full overflow-x-auto no-scrollbar h-64 flex items-end justify-between gap-3 px-2 border-b border-border/50">
               {dailySeries.map((point) => {
-                const height = Math.max(Math.round((point.visits / maxDayVisits) * 100), 4);
+                const height = Math.max(
+                  Math.round((point.visits / maxDayVisits) * 100),
+                  4,
+                );
                 return (
                   <div
                     key={point.key}
@@ -212,7 +230,10 @@ export default function DashboardAnalyticsScreen() {
                   Published Sites
                 </span>
                 <span className="text-xs font-bold">
-                  {filteredSites.filter((site) => site.status === "published").length}
+                  {
+                    filteredSites.filter((site) => site.status === "published")
+                      .length
+                  }
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -221,7 +242,9 @@ export default function DashboardAnalyticsScreen() {
                 </span>
                 <span className="text-xs font-bold">
                   {filteredSites.length > 0
-                    ? formatNumber(Math.round(totalVisits / filteredSites.length))
+                    ? formatNumber(
+                        Math.round(totalVisits / filteredSites.length),
+                      )
                     : "0"}
                 </span>
               </div>

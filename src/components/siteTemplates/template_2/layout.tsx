@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TemplateComponentProps } from "@/lib/templates";
 import CtaLink from "@/components/shared/CtaLinkModal";
+import Branding from "@/components/shared/Branding";
 
 export function Navbar({
   isEditor,
@@ -143,6 +144,8 @@ export function Footer({
             {content?.footer?.copyright ??
               `© ${new Date().getFullYear()} All rights reserved.`}
           </p>
+          {/* Branding */}
+          {!isEditor && <Branding />}
         </div>
 
         <div className="flex flex-wrap gap-6 text-sm">
